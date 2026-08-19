@@ -1,0 +1,6 @@
+interface:
+  display_name: "视频脚本写作"
+  short_description: "基于已审事实卡，撰写口语化且可追溯的事实视频脚本"
+  default_prompt: "Use $video-script-writer to turn this approved fact card into a spoken-video narration."
+policy:
+  allow_implicit_invocation: true

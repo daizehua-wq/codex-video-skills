@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video fact card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project_id", "topic", "checked_at", "publication_status", "summary", "scope", "claims", "sources", "conflicts", "open_questions"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
+    "topic": {"type": "string", "minLength": 1},
+    "checked_at": {"type": "string", "format": "date"},
+    "publication_status": {"enum": ["pass", "conditional", "blocked"]},
+    "summary": {"type": "string", "minLength": 1},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["included", "excluded"],
+      "properties": {
+        "included": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "excluded": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "claim_type", "verification_status", "confidence", "script_use", "attribution_text", "source_ids", "allowed_wording", "forbidden_wording", "scope_limitations", "notes"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^FC-[0-9]{3,}$"},
+          "statement": {"type": "string", "minLength": 1},
+          "claim_type": {"enum": ["event", "number", "quote", "identity", "chronology", "causality", "definition", "interpretation", "forecast"]},
+          "verification_status": {"enum": ["independently_verified", "primary_source_confirmed", "attributed_claim", "secondary_only", "unverified", "disputed", "false"]},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "script_use": {"enum": ["direct", "attributed", "prohibited"]},
+          "attribution_text": {"type": ["string", "null"]},
+          "source_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^SRC-[0-9]{3,}$"}},
+          "allowed_wording": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "forbidden_wording": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "scope_limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "publisher", "url", "published_at", "accessed_at", "source_tier", "independence_group", "supports_claim_ids", "limitations"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^SRC-[0-9]{3,}$"},
+          "title": {"type": "string", "minLength": 1},
+          "publisher": {"type": "string", "minLength": 1},
+          "url": {"type": "string", "minLength": 1},
+          "published_at": {"type": ["string", "null"]},
+          "accessed_at": {"type": "string", "format": "date"},
+          "source_tier": {"enum": ["A_PRIMARY_OFFICIAL", "B_PRIMARY_ATTRIBUTED", "C_INDEPENDENT_SECONDARY", "D_OTHER_SECONDARY", "E_USER_SUPPLIED"]},
+          "independence_group": {"type": "string", "minLength": 1},
+          "supports_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}},
+          "limitations": {"type": "string"}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim_ids", "description", "resolution", "publication_consequence"],
+        "properties": {
+          "claim_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}},
+          "description": {"type": "string", "minLength": 1},
+          "resolution": {"type": "string", "minLength": 1},
+          "publication_consequence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "open_questions": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}

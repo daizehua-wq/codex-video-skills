@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video script claim mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project_id", "fact_card_path", "narration_path", "target", "claim_uses", "unmapped_assertions", "checks"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
+    "fact_card_path": {"type": "string", "minLength": 1},
+    "narration_path": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "duration_seconds", "timing_basis", "audience", "tone", "style_overrides"],
+      "properties": {
+        "platform": {"type": "string", "minLength": 1},
+        "duration_seconds": {"type": ["integer", "null"], "minimum": 1},
+        "timing_basis": {"enum": ["measured", "estimated", "unspecified"]},
+        "audience": {"type": "string"},
+        "tone": {"type": "string"},
+        "style_overrides": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "claim_uses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "fact_ids", "exact_anchor", "use", "attribution_present", "scope_note"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^SC-[0-9]{3,}$"},
+          "fact_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}},
+          "exact_anchor": {"type": "string", "minLength": 1},
+          "use": {"enum": ["direct", "paraphrase", "attributed", "quote"]},
+          "attribution_present": {"type": "boolean"},
+          "scope_note": {"type": "string"}
+        }
+      }
+    },
+    "unmapped_assertions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["all_factual_claims_mapped", "prohibited_claims_used", "quotes_verified", "numbers_verified", "scope_reviewed", "repetition_reviewed", "read_aloud_completed"],
+      "properties": {
+        "all_factual_claims_mapped": {"type": "boolean"},
+        "prohibited_claims_used": {"type": "boolean"},
+        "quotes_verified": {"type": "boolean"},
+        "numbers_verified": {"type": "boolean"},
+        "scope_reviewed": {"type": "boolean"},
+        "repetition_reviewed": {"type": "boolean"},
+        "read_aloud_completed": {"type": "boolean"}
+      }
+    }
+  }
+}
