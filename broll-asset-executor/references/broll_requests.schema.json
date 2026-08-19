@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/broll_requests-2.0.json",
+  "title": "B-roll Requests v2.0",
+  "type": "object",
+  "required": ["schema", "project", "requests", "execution_rules"],
+  "properties": {
+    "schema": {"const": "broll_requests/2.0"},
+    "project": {
+      "type": "object",
+      "required": ["name", "runtime_sec", "timing_basis", "aspect_ratio", "style_profile", "target_broll_coverage_ratio"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "runtime_sec": {"type": "number", "exclusiveMinimum": 0},
+        "timing_basis": {"enum": ["measured", "estimated"]},
+        "aspect_ratio": {"type": "string", "minLength": 3},
+        "style_profile": {"const": "evidence-led-talking-head/1.0"},
+        "target_broll_coverage_ratio": {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": {"type": "number", "minimum": 0, "maximum": 1},
+            "max": {"type": "number", "minimum": 0, "maximum": 1}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "block_id", "sequence_position", "script_anchor", "coverage_window",
+          "type", "visual_role", "purpose", "required_assets", "preferred_sources",
+          "forbidden_assets", "coverage_duration_sec", "source_handles_sec", "layout",
+          "readable_region", "priority", "fact_guardrails", "fallback"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^BR[0-9]{3,}$"},
+          "block_id": {"type": "string", "pattern": "^BB[0-9]{3,}$"},
+          "sequence_position": {"type": "integer", "minimum": 1},
+          "script_anchor": {"type": "string", "minLength": 1},
+          "coverage_window": {
+            "type": "object",
+            "required": ["start_sec", "end_sec", "timing_basis"],
+            "properties": {
+              "start_sec": {"type": "number", "minimum": 0},
+              "end_sec": {"type": "number", "exclusiveMinimum": 0},
+              "timing_basis": {"enum": ["measured", "estimated"]}
+            },
+            "additionalProperties": false
+          },
+          "type": {"enum": ["Evidence", "Product", "Scene"]},
+          "visual_role": {"enum": ["proof", "demonstration", "explanation", "context", "reset"]},
+          "purpose": {"type": "string", "minLength": 1},
+          "required_assets": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "preferred_sources": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "forbidden_assets": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "coverage_duration_sec": {"type": "number", "minimum": 1, "maximum": 10},
+          "source_handles_sec": {
+            "type": "object",
+            "required": ["before", "after"],
+            "properties": {
+              "before": {"type": "number", "minimum": 0},
+              "after": {"type": "number", "minimum": 0}
+            },
+            "additionalProperties": false
+          },
+          "layout": {"enum": ["broll_dominant_with_aroll_pip", "full_screen_broll", "split_screen"]},
+          "readable_region": {"type": ["string", "null"]},
+          "priority": {"enum": ["critical", "high", "medium", "low"]},
+          "fact_guardrails": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "fallback": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "execution_rules": {
+      "type": "object",
+      "required": ["candidate_count_per_request", "source_priority", "default_reject", "output_required"],
+      "properties": {
+        "candidate_count_per_request": {
+          "type": "object",
+          "required": ["recommended", "alternates"],
+          "properties": {
+            "recommended": {"const": 1},
+            "alternates": {"const": 2}
+          },
+          "additionalProperties": false
+        },
+        "source_priority": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "default_reject": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "output_required": {
+          "type": "array",
+          "contains": {"const": "assets/"},
+          "minItems": 4
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
