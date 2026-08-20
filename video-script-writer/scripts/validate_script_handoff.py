@@ -10,6 +10,15 @@ import sys
 from pathlib import Path
 
 
+PACKAGE_HEADINGS = (
+    "## A. 核心命题",
+    "## B. 写稿逻辑",
+    "## C. 完整口播稿",
+    "## D. HKRR 自检",
+)
+HKRR_THRESHOLDS = {"H": 3, "K": 4, "R": 4, "Rhythm": 4}
+
+
 def load_json(path: Path) -> dict:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -25,6 +34,32 @@ def narration_body(narration: str) -> str:
             del lines[index]
         break
     return "\n".join(lines).strip()
+
+
+def normalize_text(text: str) -> str:
+    return "\n".join(line.rstrip() for line in text.strip().splitlines()).strip()
+
+
+def extract_package_sections(package: str, errors: list[str]) -> dict[str, str]:
+    positions = [package.find(heading) for heading in PACKAGE_HEADINGS]
+    for heading, position in zip(PACKAGE_HEADINGS, positions):
+        if position < 0:
+            errors.append(f"script package missing heading: {heading}")
+    if any(position < 0 for position in positions):
+        return {}
+    if positions != sorted(positions):
+        errors.append("script package sections must remain in A/B/C/D order")
+        return {}
+
+    sections: dict[str, str] = {}
+    for index, heading in enumerate(PACKAGE_HEADINGS):
+        start = positions[index] + len(heading)
+        end = positions[index + 1] if index + 1 < len(positions) else len(package)
+        content = package[start:end].strip()
+        if not content:
+            errors.append(f"script package section is empty: {heading}")
+        sections[heading] = content
+    return sections
 
 
 def append_anchor_error(errors: list[str], body: str, label: str, anchor: str | None) -> int | None:
@@ -53,9 +88,10 @@ def validate_fact_ids(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate narration and script_claims.json")
+    parser = argparse.ArgumentParser(description="Validate the four-part script package and machine handoff")
     parser.add_argument("fact_card", type=Path)
     parser.add_argument("narration", type=Path)
+    parser.add_argument("script_package", type=Path)
     parser.add_argument("script_claims", type=Path)
     args = parser.parse_args()
 
@@ -63,6 +99,7 @@ def main() -> int:
     mapping = load_json(args.script_claims)
     narration = args.narration.read_text(encoding="utf-8")
     body = narration_body(narration)
+    package = args.script_package.read_text(encoding="utf-8")
     schema_path = Path(__file__).resolve().parent.parent / "references" / "script-claims.schema.json"
     schema = load_json(schema_path)
     errors: list[str] = []
@@ -81,6 +118,26 @@ def main() -> int:
         errors.append("blocked fact card cannot produce a publishable script")
     if mapping.get("project_id") != fact_card.get("project_id"):
         errors.append("project_id does not match fact card")
+
+    package_path = Path(str(mapping.get("script_package_path") or ""))
+    if package_path and package_path.resolve() != args.script_package.resolve():
+        errors.append("script_package_path does not match the validated package")
+
+    package_sections = extract_package_sections(package, errors)
+    editorial = mapping.get("editorial_design", {})
+    section_a = package_sections.get(PACKAGE_HEADINGS[0], "")
+    for field in ("core_thesis", "core_question", "audience_relevance", "final_judgment"):
+        value = str(editorial.get(field) or "").strip()
+        if value and value not in section_a:
+            errors.append(f"script package A must contain editorial_design.{field}")
+    section_b = package_sections.get(PACKAGE_HEADINGS[1], "")
+    logic_chain = editorial.get("logic_chain", [])
+    rendered_logic = " → ".join(str(item) for item in logic_chain)
+    if rendered_logic and rendered_logic not in section_b:
+        errors.append("script package B must contain the declared logic chain")
+    section_c = package_sections.get(PACKAGE_HEADINGS[2], "")
+    if section_c and normalize_text(section_c) != normalize_text(body):
+        errors.append("script package C must exactly match narration.md spoken body")
 
     facts = {claim.get("id"): claim for claim in fact_card.get("claims", [])}
     mapping_ids: list[str] = []
@@ -204,12 +261,54 @@ def main() -> int:
                 f"estimated duration misses target by {calculated_delta:.2f}s; allowed {allowed_delta:.2f}s"
             )
 
+    hkrr = mapping.get("hkrr_review", {})
+    dimensions = hkrr.get("dimensions", {})
+    scores = {
+        dimension: detail.get("score")
+        for dimension, detail in dimensions.items()
+        if isinstance(detail, dict)
+    }
+    thresholds_met = all(
+        isinstance(scores.get(dimension), int) and scores[dimension] >= threshold
+        for dimension, threshold in HKRR_THRESHOLDS.items()
+    )
+    if hkrr.get("thresholds_met") is not thresholds_met:
+        errors.append("hkrr_review.thresholds_met does not match the dimension scores")
+    if not thresholds_met:
+        errors.append("final HKRR scores must reach H>=3, K>=4, R>=4 and Rhythm>=4")
+        if hkrr.get("recommend_further_revision") is not True:
+            errors.append("HKRR below threshold requires recommend_further_revision=true")
+
+    numeric_scores = {key: value for key, value in scores.items() if isinstance(value, int)}
+    if numeric_scores:
+        minimum = min(numeric_scores.values())
+        actual_weakest = {key for key, value in numeric_scores.items() if value == minimum}
+        declared_weakest = set(hkrr.get("weakest_dimensions", []))
+        if declared_weakest != actual_weakest:
+            errors.append(
+                f"hkrr_review.weakest_dimensions is {sorted(declared_weakest)}; "
+                f"calculated {sorted(actual_weakest)}"
+            )
+
+    section_d = package_sections.get(PACKAGE_HEADINGS[3], "")
+    for dimension in HKRR_THRESHOLDS:
+        detail = dimensions.get(dimension, {})
+        rationale = str(detail.get("rationale") or "").strip() if isinstance(detail, dict) else ""
+        if rationale and rationale not in section_d:
+            errors.append(f"script package D must contain the {dimension} rationale")
+        if dimension not in section_d:
+            errors.append(f"script package D must report {dimension}")
+    for label in ("当前最弱项", "是否达到最低标准", "是否建议继续修改"):
+        if label not in section_d:
+            errors.append(f"script package D must contain {label}")
+
     checks = mapping.get("checks", {})
     required_true = [
         "all_factual_claims_mapped", "quotes_verified", "numbers_verified", "scope_reviewed",
         "repetition_reviewed", "read_aloud_completed", "opening_promise_reviewed",
         "fact_interpretation_separated", "beat_progression_reviewed",
-        "ending_closure_reviewed", "duration_reviewed",
+        "ending_closure_reviewed", "duration_reviewed", "core_thesis_locked",
+        "writing_logic_reviewed", "hkrr_review_completed", "human_package_matches_narration",
     ]
     for field in required_true:
         if checks.get(field) is not True:
@@ -224,7 +323,7 @@ def main() -> int:
 
     print(
         f"OK: {len(beats)} narrative beats, {len(mapping.get('claim_uses', []))} mapped factual assertions, "
-        f"estimated={calculated_estimate:.1f}s, project={mapping.get('project_id')}"
+        f"HKRR={scores}, estimated={calculated_estimate:.1f}s, project={mapping.get('project_id')}"
     )
     return 0
 
