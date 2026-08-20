@@ -1,6 +1,6 @@
-# Spoken factual-video style
+# Spoken factual-video style v2.0
 
-Read this reference when the user has not supplied an overriding style guide or asks to improve hook strength, pacing, oral delivery or concision.
+Read this reference when the user has not supplied an overriding style guide or asks to improve hook strength, structure, pacing, oral delivery or concision.
 
 ## Voice
 
@@ -10,48 +10,88 @@ Read this reference when the user has not supplied an overriding style guide or 
 - Avoid report-like headings in the spoken body, ceremonial transitions and stacked abstractions.
 - Do not become casual at the cost of factual precision.
 
-## Hook
+## Opening: tension plus promise
 
-For short factual commentary, bring the pain point, consequence or contradiction into the opening sentence when the evidence supports it.
+For short factual commentary, bring a defensible consequence, pain point or contradiction into the opening sentence. Then establish why the viewer should continue.
 
-A useful opening progression is:
+A useful progression is:
 
-    result → contrast → source → minimum context
+    tension or consequence → nearby attribution → minimum context or scale → central question → viewing promise
 
-Aim to establish the central tension within roughly the first five spoken seconds. This is a default, not permission to distort weak evidence.
+The viewing promise tells the audience what will become understandable by the end. It must not promise a visual device or preview unsupported conclusions.
+
+Aim to establish the tension within roughly the first five spoken seconds and the central question or promise shortly afterward. This is a default, not permission to distort weak evidence.
 
 Avoid:
 
-- background chronology before the audience knows why it matters;
+- chronology before the audience knows why it matters;
 - unsupported superlatives or catastrophe language;
 - withholding the source of a self-reported number for too long;
-- repeating the same hook in the next two paragraphs.
+- restating the opening consequence in the next two paragraphs;
+- a vague promise such as “今天聊聊这件事”.
 
-## Explanation
+## Information waves
+
+Organize substantial sections as a useful variation of:
+
+    question → evidence → explanation → judgment
+
+- A question creates a specific knowledge gap.
+- Evidence states what the approved facts establish.
+- Explanation translates the mechanism or meaning into plain language.
+- Judgment closes the gap and creates the next question.
+
+Not every section needs all four lines. The test is whether the viewer can tell what was established, what it means and why the next paragraph follows.
+
+## Separate fact from interpretation
+
+Keep these layers audible:
+
+1. **Source fact:** who said, published or observed what.
+2. **Plain-language explanation:** what the fact means in context.
+3. **Editorial takeaway:** the bounded conclusion the script draws.
+
+Do not fuse an attributed statement and the writer's interpretation into one sentence if the audience could mistake the interpretation for source wording. Useful spoken separators include “按他的复盘”, “换句话说”, “这意味着” and “更准确地说”. Treat them as patterns, not mandatory phrases.
+
+## Frameworks and lists
 
 When presenting a named framework or list, make every item concrete:
 
-    term → recognizable manifestation → practical consequence
+    stable term → recognizable manifestation → practical consequence
 
-Use one concise example per item when the fact card supports it. Do not pad every item to equal length.
+Keep the original labels stable. Arrange items in a cognitive or causal sequence when the evidence allows it, so each prepares the next. Use one concise manifestation per item; do not pad every item to equal length.
+
+A list fails when the audience can repeat the labels but cannot explain how the items differ.
 
 ## Transitions
 
 Connect paragraphs by answering the question created by the previous paragraph. Prefer plain spoken bridges such as:
 
 - 但真正的问题还不是这个。
-- 所以更准确地说……
+- 可认识 AI，和把 AI 变成生产力，是两回事。
 - 钱和模型都有了，为什么还是没跑通？
-- 后来他们改了什么？
+- 那后来他们怎么调？
 
-Use these as patterns, not mandatory phrases.
+Use these as patterns, not mandatory phrases. Avoid announcing a section that could simply begin.
 
 ## Scope and attribution
 
-- Put attribution before or immediately after a sensitive number or allegation.
-- State the boundary before the audience can overgeneralize.
-- A single case should be introduced as a case and closed with its limitation.
+- Put attribution before or immediately after a sensitive number, allegation or self-report.
+- State a boundary before the audience can overgeneralize.
+- Introduce a single case as a case and close it with its limitation.
 - Distinguish a first-phase problem from the outcome of an entire transformation.
+- Do not let a forceful takeaway silently upgrade the evidence.
+
+## Ending closure
+
+The ending should:
+
+1. answer the central question raised near the opening;
+2. compress the explanation into a transferable judgment;
+3. add no new factual claim, number, example or source;
+4. stop after the strongest clean line instead of explaining the conclusion again.
+
+A call to action may follow, but it cannot replace the conclusion.
 
 ## Compression pass
 
@@ -61,11 +101,13 @@ Delete or rewrite a paragraph when it only:
 - announces that an explanation is coming;
 - repeats a disclaimer already understood;
 - uses professional language where a concrete action is available;
-- delays the next piece of information.
+- delays the next piece of information;
+- names a framework item without making it distinguishable;
+- adds intensity without adding meaning.
 
 Intentional repetition is allowed for a final rhetorical beat, but accidental duplicate lines must be removed.
 
-## Read-aloud pass
+## Read-aloud and duration pass
 
 Read the script as speech, not as prose. Fix:
 
@@ -75,3 +117,5 @@ Read the script as speech, not as prose. Fix:
 - unclear pronouns;
 - numbers that are difficult to hear;
 - punctuation that does not match the intended pause.
+
+Estimate duration from the narration body, excluding the Markdown title. For ordinary Mandarin commentary, `4.0–5.0` non-whitespace characters per second is a planning range; choose and record the actual assumption. Revise when the estimate misses a stated target by more than 15 seconds or 15 percent, whichever is larger. Human recording remains the final timing source.

@@ -1,87 +1,182 @@
 ---
 name: video-director
-description: Turn a narration script or timestamped transcript into an A-roll edit plan and explicit broll_requests.json for evidence-led talking-head videos. Use when deciding where visuals belong, how long they cover, and what real assets a downstream B-roll execution skill must obtain. Do not use to search, download, license, or process the assets.
+description: Turn a human-finalized A-roll and aligned transcript into a comprehension-led visual plan, using reusable explanation anchors, original-source evidence, product demonstrations, semantic animation, safe metaphor or text emphasis. Produce real-asset requests only when acquisition is necessary. Do not research, acquire assets or edit the final video.
 ---
 
 # Video Director
 
-Design the edit; do not execute asset acquisition.
+Design visual interventions that make narration easier to understand, verify or observe. A-roll is the default. Visual coverage is an outcome, never a quota.
 
 ## Responsibility boundary
 
 The director owns:
 
-- where A-roll remains full screen;
-- where B-roll begins and ends;
-- the visual purpose of every B-roll shot;
-- the required source class, factual guardrails and forbidden substitutions;
-- sequence grouping, shot order, coverage duration and layout;
-- the final `director_plan.json` and `broll_requests.json` handoff.
+- where the final A-roll remains uninterrupted;
+- whether a beat needs proof, explanation, demonstration, metaphor or emphasis;
+- reusable visual anchors for recurring entities, relationships, states or processes;
+- the exact information progression, presenter presence and exit point of each visual segment;
+- requests for external real assets when those assets are genuinely required;
+- the measured `director_plan.json` and acquisition-only `broll_requests.json` handoff.
 
-The downstream B-roll skill owns searching, project-consistency checks, source ranking, rights marking, downloading, cropping, transcoding and manifests. It must not decide that an additional shot is needed or reinterpret the narration.
+The director does not:
+
+- rewrite locked narration, repair unclear claims with visuals or add new shot requirements not implied by the approved script;
+- search, download, license, screenshot, crop or transcode source assets;
+- execute motion graphics, generative illustration, subtitles, effects or final editing;
+- add a visual to create rhythm, hide A-roll or reach a coverage percentage.
+
+The B-roll executor receives only real-asset acquisition requests. Motion graphics, text emphasis and illustrative metaphors remain in `director_plan.json` for a downstream editor or generation workflow.
 
 ## Required inputs
 
-Use a final narration script or timestamped transcript. Preserve the supplied wording and claims. If timing is unavailable, estimate timings explicitly and mark them as estimated; do not fabricate timecodes presented as measured.
+For an execution-ready handoff, require:
 
-Before directing, identify the finished runtime, delivery aspect ratio and any explicit editorial constraints. Apply the default style only where the user has not supplied a more specific project rule.
+- the human-finalized A-roll master;
+- explicit confirmation that recording, take selection, mistake removal, pacing and approval are complete;
+- a timecoded transcript aligned to that exact cut;
+- runtime measured from the media file;
+- delivery aspect ratio and explicit editorial constraints.
+
+Preserve the spoken wording and claims. Record material deviations from the approved narration; do not silently rewrite the speaker.
+
+## A-roll readiness gate
+
+Read [references/aroll-readiness.md](references/aroll-readiness.md) and run `scripts/check_aroll_readiness.py` when local media and subtitles are available.
+
+- `execution_ready`: all final media, timing, transcript and human-lock checks pass. Final time fields must be measured.
+- `draft_only`: any required input is missing or changing. Produce only a draft plan and readiness report; do not refresh executable asset requests.
+
+## Default directing grammar
+
+Use this sequence when it fits the argument:
+
+1. A-roll poses the question, conflict or judgment.
+2. A visual proves, explains or demonstrates the point.
+3. A-roll returns to interpret the evidence, reset attention or conclude.
+
+Do not force the sequence on every sentence. Use it at argument and chapter boundaries.
+
+## Visual-necessity gate
+
+Start every argument beat as `AROLL_FULL`. Change it only when at least one concrete gap exists:
+
+- **proof gap**: the audience needs an identifiable original source to trust a factual statement;
+- **explanation gap**: a mechanism, relationship, sequence or comparison is difficult to hold in spoken language alone;
+- **demonstration gap**: the audience needs to observe a real product, interface, process or behavior;
+- **metaphor need**: a verified but abstract relationship benefits from a clearly non-literal analogy;
+- **emphasis need**: a number, contrast or conclusion benefits from brief typography without replacing the presenter.
+
+For every non-A-roll segment, record `why_visual_needed`, `failure_if_absent`, `information_revealed` and time-aligned treatment beats. Each beat must state the visual state before it, the change, the state after it and the information gained.
+
+If removing the proposed visual would not reduce comprehension, verifiability or observability, keep A-roll. A visual reset, decorative motion or empty variety is not sufficient justification.
+
+## Reusable visual anchors
+
+Create a visual anchor only when several later beats refer to the same system, entities, chronology or comparison and a stable canvas will reduce reorientation. Examples include a relationship map, layered system, timeline, process or comparison board.
+
+Register each anchor once in `visual_anchors` and preserve:
+
+- stable entity positions, colors and labels;
+- a clear initial state;
+- incremental state changes tied to narration;
+- previously established relationships unless the script explicitly changes them;
+- readable crops for the delivery aspect ratio.
+
+Do not build a master diagram merely to establish a house style. A visual anchor must reduce a real explanation burden.
+
+## Visual routing
+
+Choose one primary mode for each segment:
+
+- `AROLL_FULL`: clear argument, emotion, transition, judgment or conclusion.
+- `SOURCE_EVIDENCE`: original news page, report, speech, document or quoted source.
+- `PRODUCT_DEMO`: real product UI, screen recording or observable workflow.
+- `MOTION_GRAPHICS`: an abstract mechanism, hierarchy, sequence, taxonomy, state change or comparison.
+- `ILLUSTRATIVE_METAPHOR`: a visibly non-literal analogy that helps the audience reason about a verified relationship or risk.
+- `TEXT_EMPHASIS`: brief numbers, keywords or contrasts layered over A-roll.
+
+Do not convert a source into a re-typeset evidence card when the original page can be shown. Do not prescribe generic push-ins, floating motion or ambient animation that reveals no new information.
+
+## Source-evidence choreography
+
+For `SOURCE_EVIDENCE`, direct an identifiable evidence sequence:
+
+1. establish publisher, document, title, date or speaker identity;
+2. move to the exact paragraph, quotation, number, table cell or timestamp;
+3. highlight only the supporting region;
+4. optionally add a translation or clearly separated editorial interpretation;
+5. leave after the evidence is readable and understood.
+
+Keep source text and editorial interpretation visually distinct. Do not let the presenter, subtitles or decoration cover source identity or the evidence region.
+
+## Presenter continuity
+
+Choose `human_presence` deliberately:
+
+- `full_frame` when the presenter is the argument, judgment or reset;
+- `split_screen` when presenter and comparison must be read together;
+- `pip` when a longer diagram, source or demonstration benefits from a visible guide;
+- `absent` when full-screen readability or observation matters more.
+
+Picture-in-picture is not a default. It must not cover readable evidence. Every `AROLL_FULL` segment records why the presenter is on screen through `return_to_aroll_reason`.
+
+## Metaphor and generated-visual safety
+
+An illustrative metaphor may explain or emphasize; it never proves a factual claim. Mark it as `representation.literal_status: metaphor`, record a concrete `misinterpretation_risk`, and require visible disclosure when AI-generated.
+
+Never use generated reconstruction as source evidence, product demonstration or a depiction of an unverified real event. When a metaphor involves real people, companies or political figures, prevent the staging from implying that the depicted event actually happened.
+
+## Opening and ending checks
+
+- Preserve a direct cold open when the locked script already provides one; do not insert a logo bumper before the conflict.
+- When a reusable anchor is central to the promise, preview it early enough to show how the video will make the topic understandable.
+- Do not introduce new evidence after the final conclusion.
+- Return to A-roll for the final factual judgment or scope caveat before a branded outro.
+- Outro visuals may recap established elements but must not create new claims.
 
 ## Directing workflow
 
-1. Divide the narration into argument beats, not arbitrary equal intervals.
-2. Mark full-screen A-roll moments for thesis statements, transitions, emotional emphasis and visual resets.
-3. Mark B-roll blocks only where a real visual can prove, demonstrate, explain or concretize the current beat.
-4. Target 60–70% B-roll coverage across the finished content. Calculate coverage from the union of B-roll time windows; never add overlapping durations twice.
-5. Build each 8–40 second B-roll block from multiple explicit 2–10 second shot requests when the beat needs internal variation. Never hide several different shot needs inside one ambiguous request.
-6. Group those requests with `block_id` and `sequence_position`. Each request still receives one recommended candidate and two alternates downstream.
-7. Return to full-screen A-roll between major evidence blocks so the speaker remains the narrative anchor.
-8. Validate factual fit, mobile readability, coverage math and downstream executability before handoff.
+1. Pass the A-roll readiness gate and fix the measured editorial runtime.
+2. Divide the transcript into argument beats and chapter boundaries.
+3. Identify whether a reusable visual anchor will materially reduce repeated explanation.
+4. Apply the visual-necessity gate to each beat, keeping clear beats as A-roll.
+5. Route justified interventions to one visual mode and choose presenter presence.
+6. Design stateful information beats and source-evidence choreography.
+7. Create `broll_requests.json` entries only for independently sourceable real assets required by `SOURCE_EVIDENCE` or `PRODUCT_DEMO` segments.
+8. Calculate observed visual durations by mode. Report the result without a target or pass/fail percentage.
+9. Validate the plan, request mapping, anchor consistency, source fidelity, semantic motion and metaphor safety.
 
-Do not insert decorative footage solely to reach the coverage target. When truthful, relevant visuals cannot support 60%, report the shortfall and the affected beats instead of inventing requests.
-
-## Default visual language
-
-Use the style in [references/style-profile.md](references/style-profile.md). Read it whenever the user has not supplied an overriding project style or when evaluating coverage, layout, shot duration or readability.
-
-The default is evidence-led rather than atmospheric:
-
-- official talks, first-party product UI, primary documents and source-backed diagrams before generic stock;
-- B-roll as the dominant layer with A-roll retained as a small picture-in-picture when continuity matters;
-- full-screen A-roll as a deliberate reset, not the unexamined default;
-- hard cuts or restrained transitions;
-- no generic “AI”, robot or office imagery when a specific product, person, document or workflow is being discussed.
+Read [references/style-profile.md](references/style-profile.md) when the user has not supplied a stronger project style. Read [references/handoff-schema.md](references/handoff-schema.md) before producing final files.
 
 ## Output contract
 
-Produce both files when the task requires a machine handoff:
+After the A-roll gate passes, produce:
 
-1. `director_plan.json`: complete A-roll/B-roll timeline, B-roll block grouping, layouts and coverage calculation.
-2. `broll_requests.json`: only explicit asset requests for downstream execution.
+1. `director_plan.json` using `director_plan/3.1`.
+2. `broll_requests.json` using `broll_requests/3.0`. An empty `requests` array is valid when no external asset acquisition is required.
 
-Read [references/handoff-schema.md](references/handoff-schema.md) before producing or validating either file. Use [references/broll_requests.schema.json](references/broll_requests.schema.json) when strict JSON validation is needed.
-
-After producing `broll_requests.json`, run:
+Run:
 
 ```bash
-python3 scripts/validate_broll_requests.py /path/to/broll_requests.json
+python3 scripts/validate_director_handoff.py /path/to/director_plan.json /path/to/broll_requests.json
 ```
 
-The validator checks the JSON Schema when `jsonschema` is available and always checks cross-field timing, IDs, block order and overlap rules.
-
-`broll_requests.json` must remain asset-oriented. Do not place editing commentary, alternative narration, speculative product capabilities or hidden implementation assumptions in it.
+The director plan carries editorial treatments. The B-roll request file remains acquisition-oriented and must not contain fabricated UI, rewritten evidence, generic editing commentary, generated metaphors or new narration.
 
 ## Quality gates
 
-Reject the handoff until all of these are true:
+Reject the handoff until:
 
-- every B-roll request points to an exact script anchor and one timeline window;
-- every request has one visual purpose and can be sourced independently;
-- every B-roll block lists its ordered request IDs;
-- total coverage is computed and compared with the project target;
-- Evidence requests identify the fact being supported and the acceptable source identity;
-- Product requests prohibit fabricated interfaces and adjacent-but-different products;
-- Scene requests state whether the scene is official or generic licensed illustration;
-- pages, documents and UI specify the region that must remain readable;
-- video requests specify desired usable duration plus source handles;
-- no B-roll request silently changes the spoken claim;
-- the downstream candidate policy remains one recommended asset plus two alternates per request.
+- final A-roll and aligned transcript pass readiness checks;
+- the timeline is measured, complete and non-overlapping;
+- every non-A-roll segment states a real comprehension, proof, demonstration, metaphor or emphasis need;
+- every treatment beat records a meaningful state change and information gain;
+- every referenced visual anchor exists, remains consistent and is reused only where declared;
+- source evidence preserves original identity, exact evidence region and readable exposure time;
+- motion graphics explain a relationship, sequence, state change or comparison rather than decorate the frame;
+- metaphors are visibly non-literal, cannot act as proof and disclose AI generation when applicable;
+- presenter presence has a stated purpose and never obstructs evidence;
+- text emphasis remains brief and does not become a substitute B-roll card;
+- every real-asset request maps to a director segment and no unrequested asset appears;
+- observed visual coverage is reported without being used as a success target;
+- long A-roll is accepted whenever narration is already clear and the presenter should remain the anchor.
