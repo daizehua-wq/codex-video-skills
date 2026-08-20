@@ -54,10 +54,14 @@ Check whether:
 - transitions arise from the previous answer's next question;
 - the script keeps producing cognitive progress;
 - it stops once the conclusion is earned.
+- every “new” fact is necessary to the core question rather than included because it was available;
+- source comparisons, audit notes and exclusions have not leaked from the fact card into narration;
 
 Threshold: `4/5`.
 
 If it fails, remove repetition, compress cases, advance the conflict or reorder questions. Do not delete necessary logic simply to shorten the script.
+
+Do not award a high Rhythm score merely because every passage has a different fact. Information that does not change the viewer's understanding is still a detour.
 
 ## Revision rule
 
@@ -79,3 +83,5 @@ If any dimension is below threshold:
 5. do not report completion while a final score remains below threshold.
 
 The human-facing review must include the four scores, a specific rationale for each, the weakest dimension, whether thresholds are met and whether another revision is recommended.
+
+Schema and handoff validation cannot score taste, necessity, neutrality or spoken attention. Score the actual narration independently; a validator pass is not evidence for any HKRR rating.

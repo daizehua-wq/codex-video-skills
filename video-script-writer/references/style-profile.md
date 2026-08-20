@@ -53,6 +53,33 @@ Keep these layers audible:
 
 Do not fuse an attributed statement and the writer's interpretation into one sentence if the audience could mistake the interpretation for source wording. Useful spoken separators include “按他的复盘”, “换句话说”, “这意味着” and “更准确地说”. Treat them as patterns, not mandatory phrases.
 
+## Fact-card completeness versus narration completeness
+
+The fact card retains the full evidence record: usable claims, conflicts, unknowns, source rankings and prohibited wording. Narration uses only what the audience needs to answer the locked core question.
+
+Before adding a verified fact, ask:
+
+- Does it establish what happened, explain the mechanism, bound the conclusion or change the final judgment?
+- Would deleting it create a real misunderstanding or evidence gap?
+- Is it merely interesting, numerically strong or available from research?
+
+Omit the fact when only the last answer is yes. “New information” is not enough; it must create useful cognitive progress.
+
+Do not introduce a metric, adjacent product, technical unknown or source conflict solely to explain why it will not be used. Keep that audit trail in the fact card and machine handoff.
+
+## Attribution economy
+
+Spoken attribution is necessary when the fact card requires it or when the source changes how the audience should weigh the claim, especially for:
+
+- company-reported performance or adoption numbers;
+- allegations, disputes and named opinions;
+- claims supported only by a supplier, executive or single case;
+- quotations and wording whose source matters.
+
+Do not list several sources to demonstrate cross-validation when one clean, safely worded sentence will do. Do not narrate agreement between sources unless that agreement is itself relevant to the story.
+
+Traceability still belongs in `script_claims.json`; removing source names from speech does not remove factual mapping.
+
 ## Frameworks and lists
 
 When presenting a named framework or list, make every item concrete:
@@ -81,6 +108,7 @@ Use these as patterns, not mandatory phrases. Avoid announcing a section that co
 - Introduce a single case as a case and close it with its limitation.
 - Distinguish a first-phase problem from the outcome of an entire transformation.
 - Do not let a forceful takeaway silently upgrade the evidence.
+- Do not let a “why” question imply causation when the evidence establishes only sequence, coexistence or one organization's implementation choices. Reframe toward “what was designed”, “what changed” or “what the case can show”.
 
 ## Ending closure
 
@@ -104,8 +132,13 @@ Delete or rewrite a paragraph when it only:
 - delays the next piece of information;
 - names a framework item without making it distinguishable;
 - adds intensity without adding meaning.
+- reports how sources were cross-checked instead of explaining the subject;
+- introduces information only to disclaim, exclude or compare it;
+- is factual and new but unnecessary to the locked core question.
 
 Intentional repetition is allowed for a final rhetorical beat, but accidental duplicate lines must be removed.
+
+Completeness is not the use of every verified claim. Concision is not a preset word count or duration. When the user leaves duration open, finish the explanation first, then measure it.
 
 ## Read-aloud and duration pass
 
