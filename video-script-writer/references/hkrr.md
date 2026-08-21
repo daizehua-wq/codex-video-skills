@@ -9,6 +9,7 @@ Happiness means viewing ease and interest, not forced comedy.
 Check whether the script has:
 
 - contrast, freshness or a useful surprise;
+- a specific verified opening anchor rather than generic intensity;
 - concrete situations or facts the viewer can picture;
 - an “原来如此” moment;
 - manageable cognitive load;
@@ -39,6 +40,7 @@ Check whether:
 - the viewer can map the issue to their own company or role;
 - the script names a problem they feel but may not have articulated;
 - the conflict matters to people judging, implementing or governing enterprise AI.
+- audience involvement is earned through a real stake rather than a generic second-person address.
 
 Threshold: `4/5`.
 
@@ -49,6 +51,8 @@ If it fails, revisit the audience, opening problem and real decision context. Do
 Check whether:
 
 - viewing motivation appears quickly;
+- the opening moves from verified anchor to audience stake, one question and an honest promise without repeating the premise;
+- the body fulfills the opening promise;
 - long stretches never pass without new information;
 - each case performs one necessary job;
 - transitions arise from the previous answer's next question;

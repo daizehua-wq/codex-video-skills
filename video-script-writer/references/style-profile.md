@@ -10,15 +10,15 @@ Read this reference when the user has not supplied an overriding style guide or 
 - Avoid report-like headings in the spoken body, ceremonial transitions and stacked abstractions.
 - Do not become casual at the cost of factual precision.
 
-## Opening: tension plus promise
+## Opening: verified anchor plus promise
 
-For short factual commentary, bring a defensible consequence, pain point or contradiction into the opening sentence. Then establish why the viewer should continue.
+For short factual commentary, begin from a specific, defensible spoken anchor: a consequence, result, cost, contrast, decision or recognizable problem. Then establish why the viewer should continue. Read [hook-framework.md](hook-framework.md) when designing, comparing or revising the opening.
 
 A useful progression is:
 
-    tension or consequence → nearby attribution → minimum context or scale → central question → viewing promise
+    verified spoken anchor → audience entry → compressed question → honest content promise
 
-The viewing promise tells the audience what will become understandable by the end. It must not promise a visual device or preview unsupported conclusions.
+Put attribution and minimum context beside the step that needs them. The viewing promise tells the audience what will become understandable by the end. It must not promise a visual device, investigation, test or conclusion the script does not actually deliver.
 
 Aim to establish the tension within roughly the first five spoken seconds and the central question or promise shortly afterward. This is a default, not permission to distort weak evidence.
 
@@ -29,6 +29,8 @@ Avoid:
 - withholding the source of a self-reported number for too long;
 - restating the opening consequence in the next two paragraphs;
 - a vague promise such as “今天聊聊这件事”.
+- using “你” as a substitute for a real audience stake;
+- presenting several unrelated questions before the viewer knows which one the video answers.
 
 ## Information waves
 
