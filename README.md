@@ -28,3 +28,7 @@ Pipeline:
     assets/ + manifest.csv + manifest.json + sources.md
 
 Responsibility boundaries are deliberate: fact checking does not write the story, script writing does not invent facts, directing does not acquire assets, and B-roll execution does not add shot requirements.
+
+## Development records
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the verified development timeline, incident postmortems, validation requirements, file conventions and release workflow.
