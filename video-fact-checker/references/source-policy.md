@@ -62,6 +62,35 @@ When sources disagree:
 4. Do not average incompatible numbers.
 5. Record the conflict and the publication consequence.
 
+## Temporal and revision audit
+
+For dates, numbers, quotations, causal claims, forecasts and source-sensitive results, search across time rather than only inside the page supplied by the user.
+
+- Search the named event window and later official updates through the fact card's `checked_at` date.
+- Search relevant entity, partner, supplier, regulator or filing domains when they can publish a primary record.
+- Keep later evidence attached to its own rollout stage, product version and measurement window. Later confirmation does not retroactively make a result part of an earlier release.
+- When checking a revised card, diff the revision to locate changes, then reverify every material claim and regenerate dependent statuses, conflicts and wording.
+
+## Negative evidence scope
+
+Use the narrowest conclusion supported by the completed search:
+
+- `specified_source_only`: the claim was not found in one or more named documents;
+- `official_sources_checked`: the claim was not found after a recorded search of relevant official domains and dates;
+- `broad_search_completed`: the claim was not found after the official search plus appropriate independent and secondary discovery routes.
+
+Do not write "untraceable", "no official source", "not disclosed", "never" or an equivalent global negative when the audit supports only `specified_source_only`. Record searched domains, source IDs, date range, upstream-trace status and a concise result summary in `verification_audit.negative_claim_audits`.
+
+## Upstream tracing
+
+For every D-tier secondary source that carries a material result:
+
+1. search the distinctive number, quotation or phrase;
+2. compare publication dates and wording;
+3. follow cited links or identify the earliest accessible primary record;
+4. record the upstream source IDs and give the secondary page the same `independence_group` as its upstream chain;
+5. if the trace remains unresolved, label it unresolved and do not upgrade the claim beyond secondary evidence.
+
 ## Wording discipline
 
 Allowed wording must carry all material limitations. In particular:

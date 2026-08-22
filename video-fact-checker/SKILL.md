@@ -34,17 +34,21 @@ Preserve the user's requested scope. If the core claim cannot be identified with
 ## Verification workflow
 
 1. Convert the supplied material into atomic claims. Split combined claims when different evidence is required.
-2. Search for the strongest available evidence. For current, disputed, high-stakes or source-sensitive claims, verify against live sources rather than memory.
-3. Build a source ledger before assigning claim status. Read [references/source-policy.md](references/source-policy.md) whenever external research or conflicting sources are involved.
-4. For every claim, distinguish what the source establishes, what a named person or company states, what is independently corroborated, and what remains unknown, disputed or false.
-5. Check scope in both directions: do not broaden a single case into a company-wide result, and do not narrow a qualified statement into an absolute one.
-6. Resolve conflicting counts, dates or taxonomies using the closest primary record. Keep the competing version in the conflict log when it materially affects publication.
-7. Assign script use as direct, attributed or prohibited. Safe wording must preserve every necessary attribution and limitation.
-8. Set the publication gate:
+2. When the input is a revision, compare it with the prior artifact to identify changes, then recheck every material claim. A revision is a full verification pass, not a patch review.
+3. Search for the strongest available evidence. For current, disputed, high-stakes or source-sensitive claims, verify against live sources rather than memory.
+4. Run a temporal sweep for every date, number, quotation, causal claim, forecast or source-sensitive result: search the supplied time window, later official updates through `checked_at`, relevant company and partner domains, and exact-value or exact-phrase variants.
+5. Trace every secondary result or number to its upstream source before treating it as evidence. Record unresolved traces; domains with different names do not create independent evidence chains.
+6. Build a source ledger before assigning claim status. Read [references/source-policy.md](references/source-policy.md) whenever external research, a revision, negative finding or conflicting source is involved.
+7. Pass the negative-conclusion gate before writing "untraceable", "no official source", "not disclosed", "never happened" or an equivalent statement. Distinguish absence from one specified page, absence after an official-domain search, and absence after a broader search. Record the actual search boundary; never promote the first into the second or third.
+8. For every claim, distinguish what the source establishes, what a named person or company states, what is independently corroborated, and what remains unknown, disputed or false.
+9. Check scope in both directions: do not broaden a single case into a company-wide result, narrow a qualified statement into an absolute one, or merge metrics from different rollout stages, product versions or measurement windows.
+10. Resolve conflicting counts, dates or taxonomies using the closest primary record. Keep the competing version in the conflict log when it materially affects publication.
+11. Assign script use as direct, attributed or prohibited. Safe wording must preserve every necessary attribution and limitation.
+12. Set the publication gate:
    - pass: the core thesis is supported and all publishable claims have safe wording;
    - conditional: a usable evidence base exists, but named claims must be excluded or qualified;
    - blocked: the core thesis depends on evidence that is missing, disputed, false or materially contradictory.
-9. Produce the three outputs and validate fact_card.json.
+13. Produce the three outputs and validate `fact_card.json`. New and revised cards use schema version `1.1`; legacy `1.0` cards remain readable but must be upgraded when revised.
 
 ## Evidence rules
 
@@ -54,6 +58,8 @@ Preserve the user's requested scope. If the core claim cannot be identified with
 - Exact quotations must be checked against the closest available recording, transcript or first-party text. Do not turn a paraphrase into quotation marks.
 - Search-result snippets, unattributed cards and AI summaries are discovery aids, not final evidence.
 - Absence of evidence is recorded as unverified, not automatically false.
+- Absence from one document supports only "not found in that document". A broader negative statement requires a recorded temporal and source-coverage audit.
+- A later official disclosure may validate a claim without making it part of an earlier rollout. Preserve both the evidence status and the event stage.
 - Inference is allowed only when labeled as inference and when the supporting facts are listed.
 - Never add precise numbers, duration, causal consequences, superlatives or universal scope that the sources do not establish.
 
@@ -65,11 +71,11 @@ Produce:
     fact_card.md
     sources.md
 
-fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it.
+fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it. Version `1.1` records the temporal search, upstream traces, negative-claim audits and revision recheck.
 
 fact_card.md is the readable rendering of the same evidence. It must include the conclusion, event boundary, timeline when relevant, claim-status table, conflicts, unknowns, safe wording and prohibited wording.
 
-sources.md must list actual source pages, source tier, publisher, date, access date, independence group, supported claim IDs and source limitations. Link to source pages rather than search results.
+sources.md must list actual source pages, source tier, publisher, date, access date, independence group, supported claim IDs and source limitations. It must also summarize temporal coverage, unresolved upstream traces and negative-search boundaries. Link to source pages rather than search results.
 
 After producing the JSON, run:
 
@@ -85,6 +91,10 @@ Do not report completion until:
 - every direct or attributed claim points to at least one real source;
 - every attributed claim contains usable attribution wording;
 - source tiers and shared upstream evidence are recorded;
+- every D-tier secondary source is traced to an upstream source or explicitly marked unresolved;
+- temporal search coverage reaches `checked_at` for source-sensitive claims;
+- every `secondary_only`, `unverified` or `false` claim has a negative-claim audit stating what was searched and how broad the conclusion may be;
+- a revision records the prior artifact, changed claim IDs and a completed full recheck of all material claims;
 - conflicts and unknowns are visible rather than silently resolved;
 - safe wording does not outrun the cited evidence;
 - prohibited claims cannot be mistaken for publishable facts;

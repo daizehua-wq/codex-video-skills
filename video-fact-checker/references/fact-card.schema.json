@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "project_id", "topic", "checked_at", "publication_status", "summary", "scope", "claims", "sources", "conflicts", "open_questions"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"enum": ["1.0", "1.1"]},
     "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
     "topic": {"type": "string", "minLength": 1},
     "checked_at": {"type": "string", "format": "date"},
@@ -18,6 +18,69 @@
       "properties": {
         "included": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "excluded": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "verification_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "temporal_search", "secondary_source_traces", "negative_claim_audits", "revision_audit"],
+      "properties": {
+        "mode": {"enum": ["initial", "revision"]},
+        "temporal_search": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicable", "completed", "searched_through", "date_range", "official_domains", "notes"],
+          "properties": {
+            "applicable": {"type": "boolean"},
+            "completed": {"type": "boolean"},
+            "searched_through": {"type": "string", "format": "date"},
+            "date_range": {"type": "string", "minLength": 1},
+            "official_domains": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+            "notes": {"type": "string", "minLength": 1}
+          }
+        },
+        "secondary_source_traces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source_id", "status", "upstream_source_ids", "notes"],
+            "properties": {
+              "source_id": {"type": "string", "pattern": "^SRC-[0-9]{3,}$"},
+              "status": {"enum": ["traced", "unresolved", "not_applicable"]},
+              "upstream_source_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^SRC-[0-9]{3,}$"}},
+              "notes": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "negative_claim_audits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim_id", "finding_scope", "searched_source_ids", "searched_domains", "date_range", "upstream_trace_completed", "result_summary"],
+            "properties": {
+              "claim_id": {"type": "string", "pattern": "^FC-[0-9]{3,}$"},
+              "finding_scope": {"enum": ["specified_source_only", "official_sources_checked", "broad_search_completed"]},
+              "searched_source_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^SRC-[0-9]{3,}$"}},
+              "searched_domains": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+              "date_range": {"type": "string", "minLength": 1},
+              "upstream_trace_completed": {"type": "boolean"},
+              "result_summary": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "revision_audit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base_artifact", "changed_claim_ids", "all_material_claims_rechecked", "notes"],
+          "properties": {
+            "base_artifact": {"type": ["string", "null"]},
+            "changed_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}},
+            "all_material_claims_rechecked": {"type": "boolean"},
+            "notes": {"type": "string", "minLength": 1}
+          }
+        }
       }
     },
     "claims": {
@@ -78,5 +141,11 @@
       }
     },
     "open_questions": {"type": "array", "items": {"type": "string", "minLength": 1}}
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"schema_version": {"const": "1.1"}}},
+      "then": {"required": ["verification_audit"]}
+    }
+  ]
 }
