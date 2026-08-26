@@ -58,6 +58,16 @@ Useful route families include:
 - **Boundary reversal:** correct the likely wrong diagnosis—“the failure was not the whole transformation; it was this stage or design”—without repeating a disclaimer later.
 - **Case-to-rule:** start with one bounded case, then ask what transferable condition it reveals.
 
+### Interest-cliff route
+
+When the audience is likely to think the topic is unrelated to them, an interest-cliff hook may compress the mechanism into a direct consequence:
+
+    if the audience takes a recognizable action → a relevant consequence may follow → the case shows a safer or more useful alternative
+
+Use a conditional consequence only when it is source-supported or logically entailed by the stated setup. Do not invent an extreme loss, medical harm, legal penalty, missed revenue, job loss or failure rate merely to intensify the first sentence. The consequence must remain true without relying on a later disclaimer.
+
+After the consequence, use a short landing line, then introduce the case or distinction that resolves it. Avoid repeating the same warning in the next paragraph.
+
 Do not force a route family that requires missing evidence. Three routes must not be three phrasings of the same number or conclusion.
 
 Compare candidates on:

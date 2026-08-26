@@ -36,6 +36,20 @@ def narration_body(narration: str) -> str:
     return "\n".join(lines).strip()
 
 
+def markdown_h1_titles(markdown: str) -> list[str]:
+    """Return level-one headings outside fenced code blocks."""
+    titles: list[str] = []
+    in_fence = False
+    for line in markdown.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            in_fence = not in_fence
+            continue
+        if not in_fence and stripped.startswith("# "):
+            titles.append(stripped[2:].strip())
+    return titles
+
+
 def normalize_text(text: str) -> str:
     return "\n".join(line.rstrip() for line in text.strip().splitlines()).strip()
 
@@ -43,8 +57,11 @@ def normalize_text(text: str) -> str:
 def extract_package_sections(package: str, errors: list[str]) -> dict[str, str]:
     positions = [package.find(heading) for heading in PACKAGE_HEADINGS]
     for heading, position in zip(PACKAGE_HEADINGS, positions):
+        count = package.count(heading)
+        if count != 1:
+            errors.append(f"script package must contain heading exactly once: {heading} (found {count})")
         if position < 0:
-            errors.append(f"script package missing heading: {heading}")
+            continue
     if any(position < 0 for position in positions):
         return {}
     if positions != sorted(positions):
@@ -119,11 +136,26 @@ def main() -> int:
     if mapping.get("project_id") != fact_card.get("project_id"):
         errors.append("project_id does not match fact card")
 
-    package_path = Path(str(mapping.get("script_package_path") or ""))
-    if package_path and package_path.resolve() != args.script_package.resolve():
-        errors.append("script_package_path does not match the validated package")
+    for field_name, actual_path in (
+        ("fact_card_path", args.fact_card),
+        ("narration_path", args.narration),
+        ("script_package_path", args.script_package),
+    ):
+        mapped_path = str(mapping.get(field_name) or "").strip()
+        if not mapped_path:
+            errors.append(f"{field_name} must be a non-empty path")
+        elif Path(mapped_path).expanduser().resolve() != actual_path.resolve():
+            errors.append(f"{field_name} does not match the validated file")
 
     package_sections = extract_package_sections(package, errors)
+    package_titles = markdown_h1_titles(package)
+    narration_titles = markdown_h1_titles(narration)
+    if len(package_titles) != 1:
+        errors.append(f"script package must contain exactly one H1; found {len(package_titles)}")
+    if len(narration_titles) != 1:
+        errors.append(f"narration must contain exactly one H1; found {len(narration_titles)}")
+    if len(package_titles) == 1 and len(narration_titles) == 1 and package_titles[0] != narration_titles[0]:
+        errors.append("script package and narration H1 titles must match exactly")
     editorial = mapping.get("editorial_design", {})
     section_a = package_sections.get(PACKAGE_HEADINGS[0], "")
     for field in ("core_thesis", "core_question", "audience_relevance", "final_judgment"):
@@ -140,6 +172,23 @@ def main() -> int:
         errors.append("script package C must exactly match narration.md spoken body")
 
     facts = {claim.get("id"): claim for claim in fact_card.get("claims", [])}
+    transferability = fact_card.get("transferability", {})
+    lessons = {lesson.get("id"): lesson for lesson in transferability.get("lessons", [])}
+    mapping_version = mapping.get("schema_version")
+    if transferability.get("applicable") is True and mapping_version != "1.3":
+        errors.append("case-based fact card with transferability requires script_claims schema 1.3")
+
+    selected_lesson_ids = editorial.get("selected_lesson_ids", [])
+    for lesson_id in selected_lesson_ids:
+        if lesson_id not in lessons:
+            errors.append(f"editorial_design: unknown selected lesson ID {lesson_id}")
+    if transferability.get("applicable") is True and not selected_lesson_ids:
+        errors.append("case-based script requires at least one selected_lesson_id")
+    if mapping_version == "1.3":
+        audience_decision = str(editorial.get("audience_decision") or "").strip()
+        if audience_decision and audience_decision not in section_a:
+            errors.append("script package A must contain editorial_design.audience_decision")
+
     mapping_ids: list[str] = []
     claim_anchors: list[str] = []
 
@@ -165,6 +214,42 @@ def main() -> int:
     if mapping.get("unmapped_assertions"):
         errors.append("unmapped_assertions must be empty at completion")
 
+    lesson_use_ids: list[str] = []
+    lesson_anchors: list[str] = []
+    used_lesson_ids: set[str] = set()
+    for use in mapping.get("lesson_uses", []):
+        use_id = use.get("id", "<missing>")
+        lesson_use_ids.append(use_id)
+        anchor = use.get("exact_anchor", "")
+        lesson_anchors.append(anchor)
+        if anchor and anchor not in body:
+            errors.append(f"{use_id}: exact_anchor not found in narration body")
+        for lesson_id in use.get("lesson_ids", []):
+            used_lesson_ids.add(lesson_id)
+            lesson = lessons.get(lesson_id)
+            if lesson is None:
+                errors.append(f"{use_id}: unknown lesson ID {lesson_id}")
+                continue
+            handoff_use = lesson.get("handoff_use")
+            evidence_layer = lesson.get("evidence_layer")
+            if evidence_layer == "implementation_hypothesis":
+                errors.append(f"{use_id}: implementation hypothesis {lesson_id} cannot be used in script")
+            if handoff_use not in {"script_ready", "conditional"}:
+                errors.append(f"{use_id}: lesson {lesson_id} is not permitted for script use")
+            if handoff_use == "conditional" and use.get("conditions_preserved") is not True:
+                errors.append(f"{use_id}: conditional lesson {lesson_id} must preserve conditions")
+            if use.get("implementation_difficulty_preserved") is not True:
+                errors.append(f"{use_id}: lesson {lesson_id} must preserve implementation difficulty")
+    if len(lesson_use_ids) != len(set(lesson_use_ids)):
+        errors.append("script lesson-use IDs must be unique")
+    if len(lesson_anchors) != len(set(lesson_anchors)):
+        errors.append("lesson-use exact anchors must be unique")
+    if transferability.get("applicable") is True and not used_lesson_ids:
+        errors.append("case-based script requires at least one mapped lesson use")
+    missing_selected_uses = sorted(set(selected_lesson_ids) - used_lesson_ids)
+    if missing_selected_uses:
+        errors.append(f"selected lessons are not mapped in narration: {missing_selected_uses}")
+
     beats = mapping.get("narrative_beats", [])
     beat_ids = [beat.get("id") for beat in beats]
     if len(beat_ids) != len(set(beat_ids)):
@@ -181,6 +266,9 @@ def main() -> int:
             beat_positions.append(position)
         fact_ids = beat.get("fact_ids", [])
         validate_fact_ids(errors, facts, beat_id, fact_ids)
+        for lesson_id in beat.get("lesson_ids", []):
+            if lesson_id not in lessons:
+                errors.append(f"{beat_id}: unknown lesson ID {lesson_id}")
         if beat.get("statement_type") in {"fact", "attributed_fact"} and not fact_ids:
             errors.append(f"{beat_id}: factual beat requires fact_ids")
         if index < len(beats) - 1 and not str(beat.get("leads_to") or "").strip():
@@ -278,6 +366,11 @@ def main() -> int:
         errors.append("final HKRR scores must reach H>=3, K>=4, R>=4 and Rhythm>=4")
         if hkrr.get("recommend_further_revision") is not True:
             errors.append("HKRR below threshold requires recommend_further_revision=true")
+    revision_actions = hkrr.get("revision_actions")
+    if hkrr.get("recommend_further_revision") is True and not revision_actions:
+        errors.append("recommend_further_revision=true requires non-empty revision_actions")
+    if hkrr.get("recommend_further_revision") is False and revision_actions:
+        errors.append("recommend_further_revision=false requires empty revision_actions")
 
     numeric_scores = {key: value for key, value in scores.items() if isinstance(value, int)}
     if numeric_scores:
@@ -313,6 +406,14 @@ def main() -> int:
     for field in required_true:
         if checks.get(field) is not True:
             errors.append(f"checks.{field} must be true")
+    if mapping_version == "1.3":
+        for field in (
+            "transferability_reviewed",
+            "lesson_conditions_preserved",
+            "implementation_difficulty_reviewed",
+        ):
+            if checks.get(field) is not True:
+                errors.append(f"checks.{field} must be true")
     if checks.get("prohibited_claims_used") is not False:
         errors.append("checks.prohibited_claims_used must be false")
 
@@ -323,6 +424,7 @@ def main() -> int:
 
     print(
         f"OK: {len(beats)} narrative beats, {len(mapping.get('claim_uses', []))} mapped factual assertions, "
+        f"{len(mapping.get('lesson_uses', []))} mapped transferable lessons, "
         f"HKRR={scores}, estimated={calculated_estimate:.1f}s, project={mapping.get('project_id')}"
     )
     return 0

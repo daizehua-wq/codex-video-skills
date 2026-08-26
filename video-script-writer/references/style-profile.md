@@ -45,6 +45,12 @@ Organize substantial sections as a useful variation of:
 
 Not every section needs all four lines. The test is whether the viewer can tell what was established, what it means and why the next paragraph follows.
 
+## Case before method, method before tools
+
+For case-based scripts, first state what the case establishes, then extract the permitted lesson, then explain its applicability and difficulty. Do not jump from a company example directly to a named tool or setup sequence.
+
+Keep structural concepts separate from rollout stages. A framework describing “what parts exist” should not repeat a maturity path describing “what happens first”. Each list must answer a different audience question.
+
 ## Separate fact from interpretation
 
 Keep these layers audible:

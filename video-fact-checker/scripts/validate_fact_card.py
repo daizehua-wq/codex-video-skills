@@ -100,10 +100,13 @@ def main() -> int:
     if data.get("publication_status") in {"pass", "conditional"} and usable_claims == 0:
         errors.append("pass or conditional fact card requires at least one usable claim")
 
-    if schema_version == "1.0":
-        print("WARN: schema 1.0 is legacy; upgrade to 1.1 when revising this card", file=sys.stderr)
+    if schema_version in {"1.0", "1.1"}:
+        print(
+            f"WARN: schema {schema_version} is legacy; upgrade to 1.2 when revising this card",
+            file=sys.stderr,
+        )
 
-    if schema_version == "1.1":
+    if schema_version in {"1.1", "1.2"}:
         audit = data.get("verification_audit", {})
         temporal = audit.get("temporal_search", {})
         temporal_claim_types = {"number", "quote", "chronology", "causality", "forecast"}
@@ -187,6 +190,60 @@ def main() -> int:
                 if upstream and upstream.get("independence_group") != source_group:
                     errors.append(f"{source_id}: traced upstream {upstream_id} must share independence_group")
 
+    transferability = data.get("transferability", {})
+    lessons = transferability.get("lessons", [])
+    if schema_version == "1.2":
+        mechanism_claim_ids = transferability.get("mechanism_claim_ids", [])
+        unknown_mechanism_claims = sorted(set(mechanism_claim_ids) - claim_id_set)
+        if unknown_mechanism_claims:
+            errors.append(
+                "transferability mechanism references unknown claim IDs "
+                f"{unknown_mechanism_claims}"
+            )
+
+        lesson_ids = [lesson.get("id") for lesson in lessons]
+        if len(lesson_ids) != len(set(lesson_ids)):
+            errors.append("transferability lesson IDs must be unique")
+        if transferability.get("applicable") is True and not lessons:
+            errors.append("applicable transferability analysis requires at least one lesson")
+        if transferability.get("applicable") is False and lessons:
+            errors.append("non-applicable transferability analysis must not contain lessons")
+
+        for lesson in lessons:
+            lesson_id = lesson.get("id", "<missing>")
+            supporting_claim_ids = lesson.get("supporting_claim_ids", [])
+            unknown_supports = sorted(set(supporting_claim_ids) - claim_id_set)
+            if unknown_supports:
+                errors.append(f"{lesson_id}: unknown supporting claim IDs {unknown_supports}")
+            evidence_layer = lesson.get("evidence_layer")
+            handoff_use = lesson.get("handoff_use")
+            if evidence_layer in {"source_established", "bounded_synthesis"} and not supporting_claim_ids:
+                errors.append(f"{lesson_id}: {evidence_layer} lesson requires supporting_claim_ids")
+            if evidence_layer == "implementation_hypothesis" and handoff_use in {"script_ready", "conditional"}:
+                errors.append(
+                    f"{lesson_id}: implementation hypothesis must remain context_only or prohibited"
+                )
+            if handoff_use == "script_ready":
+                if not supporting_claim_ids:
+                    errors.append(f"{lesson_id}: script_ready lesson requires supporting_claim_ids")
+                prohibited_supports = sorted(
+                    claim_id
+                    for claim_id in supporting_claim_ids
+                    if claims_by_id.get(claim_id, {}).get("script_use") == "prohibited"
+                )
+                if prohibited_supports:
+                    errors.append(
+                        f"{lesson_id}: script_ready lesson uses prohibited claims {prohibited_supports}"
+                    )
+            if not lesson.get("applies_when"):
+                errors.append(f"{lesson_id}: transferable lesson requires applies_when conditions")
+            if not lesson.get("fails_when"):
+                errors.append(f"{lesson_id}: transferable lesson requires fails_when conditions")
+            if not lesson.get("difficulty_drivers"):
+                errors.append(f"{lesson_id}: difficulty rating requires difficulty_drivers")
+            if not lesson.get("evaluation_signals"):
+                errors.append(f"{lesson_id}: transferable lesson requires evaluation_signals")
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
@@ -194,7 +251,8 @@ def main() -> int:
 
     print(
         f"OK: schema={schema_version}, {len(claims)} claims, {len(sources)} sources, "
-        f"{usable_claims} script-usable claims, status={data.get('publication_status')}"
+        f"{usable_claims} script-usable claims, {len(lessons)} transferable lessons, "
+        f"status={data.get('publication_status')}"
     )
     return 0
 

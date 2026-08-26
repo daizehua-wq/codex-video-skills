@@ -9,7 +9,7 @@
     "hkrr_review", "claim_uses", "unmapped_assertions", "checks"
   ],
   "properties": {
-    "schema_version": {"const": "1.2"},
+    "schema_version": {"enum": ["1.2", "1.3"]},
     "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
     "fact_card_path": {"type": "string", "minLength": 1},
     "narration_path": {"type": "string", "minLength": 1},
@@ -23,6 +23,13 @@
         "core_question": {"type": "string", "minLength": 1},
         "audience_relevance": {"type": "string", "minLength": 1},
         "final_judgment": {"type": "string", "minLength": 1},
+        "selected_lesson_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^TL-[0-9]{3,}$"}
+        },
+        "audience_decision": {"type": "string", "minLength": 1},
         "logic_chain": {
           "type": "array",
           "minItems": 3,
@@ -66,6 +73,11 @@
             "type": "array",
             "uniqueItems": true,
             "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}
+          },
+          "lesson_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^TL-[0-9]{3,}$"}
           },
           "new_information": {"type": "string", "minLength": 1},
           "leads_to": {"type": ["string", "null"]}
@@ -167,6 +179,24 @@
         }
       }
     },
+    "lesson_uses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "lesson_ids", "exact_anchor", "use", "conditions_preserved", "implementation_difficulty_preserved", "scope_note"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^LU-[0-9]{3,}$"},
+          "lesson_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^TL-[0-9]{3,}$"}},
+          "exact_anchor": {"type": "string", "minLength": 1},
+          "use": {"enum": ["central_takeaway", "supporting_takeaway", "boundary", "implementation_path"]},
+          "conditions_preserved": {"type": "boolean"},
+          "implementation_difficulty_preserved": {"type": "boolean"},
+          "scope_note": {"type": "string", "minLength": 1}
+        }
+      }
+    },
     "unmapped_assertions": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "checks": {
       "type": "object",
@@ -196,9 +226,24 @@
         "writing_logic_reviewed": {"type": "boolean"},
         "hkrr_review_completed": {"type": "boolean"},
         "human_package_matches_narration": {"type": "boolean"}
+        ,"transferability_reviewed": {"type": "boolean"}
+        ,"lesson_conditions_preserved": {"type": "boolean"}
+        ,"implementation_difficulty_reviewed": {"type": "boolean"}
       }
     }
   },
+  "allOf": [
+    {
+      "if": {"properties": {"schema_version": {"const": "1.3"}}},
+      "then": {
+        "required": ["lesson_uses"],
+        "properties": {
+          "editorial_design": {"required": ["selected_lesson_ids", "audience_decision"]},
+          "checks": {"required": ["transferability_reviewed", "lesson_conditions_preserved", "implementation_difficulty_reviewed"]}
+        }
+      }
+    }
+  ],
   "$defs": {
     "hkrrDimension": {
       "type": "object",
