@@ -4,9 +4,12 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 import json
+import re
 import sys
 from pathlib import Path
+from typing import List, Set
 
 
 def load_json(path: Path) -> dict:
@@ -14,25 +17,122 @@ def load_json(path: Path) -> dict:
         return json.load(handle)
 
 
+def _matches_type(value: object, expected: str) -> bool:
+    """Implement the JSON types used by the bundled schema."""
+    if expected == "null":
+        return value is None
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    return False
+
+
+def _stdlib_schema_errors(value: object, rule: dict, path: str = "root") -> List[str]:
+    """Validate the subset of JSON Schema used by fact-card.schema.json.
+
+    This keeps the skill fully functional on a stock Python 3 installation. It is
+    intentionally scoped to the schema keywords present in the bundled schema.
+    """
+    errors: List[str] = []
+
+    expected_type = rule.get("type")
+    if expected_type is not None:
+        expected_types = [expected_type] if isinstance(expected_type, str) else expected_type
+        if not any(_matches_type(value, item) for item in expected_types):
+            errors.append(f"schema {path}: expected type {expected_type!r}")
+            return errors
+
+    if "const" in rule and value != rule["const"]:
+        errors.append(f"schema {path}: expected constant {rule['const']!r}")
+    if "enum" in rule and value not in rule["enum"]:
+        errors.append(f"schema {path}: value {value!r} is not in {rule['enum']!r}")
+
+    if isinstance(value, dict):
+        properties = rule.get("properties", {})
+        for key in rule.get("required", []):
+            if key not in value:
+                errors.append(f"schema {path}: missing required property {key!r}")
+        if rule.get("additionalProperties") is False:
+            for key in value:
+                if key not in properties:
+                    errors.append(f"schema {path}.{key}: additional property is not allowed")
+        for key, child_rule in properties.items():
+            if key in value:
+                errors.extend(_stdlib_schema_errors(value[key], child_rule, f"{path}.{key}"))
+
+    if isinstance(value, list):
+        if len(value) < rule.get("minItems", 0):
+            errors.append(f"schema {path}: requires at least {rule['minItems']} items")
+        if rule.get("uniqueItems"):
+            seen: Set[str] = set()
+            for index, item in enumerate(value):
+                marker = json.dumps(item, ensure_ascii=False, sort_keys=True)
+                if marker in seen:
+                    errors.append(f"schema {path}.{index}: duplicate item")
+                seen.add(marker)
+        item_rule = rule.get("items")
+        if isinstance(item_rule, dict):
+            for index, item in enumerate(value):
+                errors.extend(_stdlib_schema_errors(item, item_rule, f"{path}.{index}"))
+
+    if isinstance(value, str):
+        if len(value) < rule.get("minLength", 0):
+            errors.append(f"schema {path}: requires at least {rule['minLength']} characters")
+        if "pattern" in rule and re.search(rule["pattern"], value) is None:
+            errors.append(f"schema {path}: value does not match pattern {rule['pattern']!r}")
+        if rule.get("format") == "date":
+            try:
+                date.fromisoformat(value)
+            except ValueError:
+                errors.append(f"schema {path}: expected an ISO date in YYYY-MM-DD form")
+
+    for compound_rule in rule.get("allOf", []):
+        condition = compound_rule.get("if")
+        consequence = compound_rule.get("then")
+        if condition is None:
+            errors.extend(_stdlib_schema_errors(value, compound_rule, path))
+        elif not _stdlib_schema_errors(value, condition, path) and consequence is not None:
+            errors.extend(_stdlib_schema_errors(value, consequence, path))
+
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate fact_card.json")
+    parser.add_argument(
+        "--stdlib-schema",
+        action="store_true",
+        help="force the bundled dependency-free schema validator",
+    )
     parser.add_argument("fact_card", type=Path)
     args = parser.parse_args()
 
     data = load_json(args.fact_card)
     schema_path = Path(__file__).resolve().parent.parent / "references" / "fact-card.schema.json"
     schema = load_json(schema_path)
-    errors: list[str] = []
+    errors: List[str] = []
 
-    try:
-        import jsonschema
+    if not args.stdlib_schema:
+        try:
+            import jsonschema
 
-        validator = jsonschema.Draft202012Validator(schema)
-        for error in sorted(validator.iter_errors(data), key=lambda item: list(item.path)):
-            location = ".".join(str(part) for part in error.path) or "root"
-            errors.append(f"schema {location}: {error.message}")
-    except ImportError:
-        print("WARN: jsonschema is unavailable; running relational checks only", file=sys.stderr)
+            validator = jsonschema.Draft202012Validator(schema)
+            for error in sorted(validator.iter_errors(data), key=lambda item: list(item.path)):
+                location = ".".join(str(part) for part in error.path) or "root"
+                errors.append(f"schema {location}: {error.message}")
+        except ImportError:
+            errors.extend(_stdlib_schema_errors(data, schema))
+    else:
+        errors.extend(_stdlib_schema_errors(data, schema))
 
     claims = data.get("claims", [])
     sources = data.get("sources", [])

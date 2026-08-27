@@ -38,6 +38,17 @@ Accept a topic, claim list, draft fact card, supplied source material, or explic
 
 Preserve the user's requested scope. If the core claim cannot be identified without changing that scope, ask one concise question; otherwise proceed.
 
+## Plug-and-play runtime contract
+
+The copied skill directory must work on a stock Python 3.7+ runtime. Do not require `pip install`, npm packages, repository-specific paths, environment variables or a separate setup step. Resolve every script and reference relative to this `SKILL.md` directory.
+
+Select the operating mode from the request without asking the user to configure it:
+
+- **Case analysis:** use when the input concerns a company case, implementation story, comparison, lessons for other organizations, reuse, difficulty or how to implement. Set `transferability.applicable` to `true`, run the transferability gate and produce `implementation_path`.
+- **Claim verification:** use for a standalone claim, quotation, number or event with no requested organizational lesson. Set `transferability.applicable` to `false` and `implementation_path.status` to `not_applicable`.
+
+Default to the current schema (`1.3`) in both modes. Never downgrade the schema because a runtime dependency is missing, and never silently omit the implementation path. A user only needs to provide the topic, source material or draft to be checked; no custom invocation prompt is required.
+
 ## Verification workflow
 
 1. Convert the supplied material into atomic claims. Split combined claims when different evidence is required.
@@ -94,7 +105,11 @@ After producing the JSON, run:
 
     python3 scripts/validate_fact_card.py /path/to/fact_card.json
 
-The validator checks structure and cross-references. It cannot replace semantic source review.
+The validator checks structure and cross-references. It uses `jsonschema` when available and otherwise falls back to a bundled standard-library implementation with the same required-field enforcement. To test the dependency-free path explicitly, run:
+
+    python3 scripts/validate_fact_card.py --stdlib-schema /path/to/fact_card.json
+
+The validator cannot replace semantic source review.
 
 ## Completion gate
 
