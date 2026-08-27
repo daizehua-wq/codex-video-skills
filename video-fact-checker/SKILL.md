@@ -1,6 +1,6 @@
 ---
 name: video-fact-checker
-description: Verify claims for factual commentary videos and produce a source-ranked, script-ready fact card with evidence-bounded transferable lessons. Use before script writing when facts must be checked or a case must be translated into lessons for other organizations. Do not write the narration, choose the editorial angle, or plan B-roll.
+description: Verify claims for factual commentary videos and produce a source-ranked, script-ready fact card with evidence-bounded transferable lessons and a clearly labeled implementation path. Use before script writing when facts must be checked or a case must be translated into lessons for other organizations. Do not write the narration, choose the editorial angle, or plan B-roll.
 ---
 
 # Video Fact Checker
@@ -18,6 +18,7 @@ This skill owns:
 - documenting conflicts, unknowns, safe wording and prohibited wording;
 - extracting evidence-bounded operational lessons from verified case facts;
 - stating each lesson's applicability conditions, failure conditions, non-reusable elements and implementation difficulty;
+- deriving a staged, evidence-bounded implementation path and labeling it as guidance rather than verified case fact;
 - distinguishing source-established practice, bounded synthesis and unverified implementation hypothesis;
 - producing fact_card.json, fact_card.md and sources.md.
 
@@ -27,6 +28,7 @@ This skill does not own:
 - platform titles, social copy, edit decisions or B-roll requests;
 - inventing a stronger angle than the evidence supports;
 - turning one case into a universal best practice or guaranteed result;
+- presenting an analyst-designed implementation path as something the case source directly established;
 - choosing a product stack or implementation vendor unless the user explicitly places it in scope and the relevant capabilities are verified;
 - treating user preference, repetition across syndicated articles, or public accessibility as proof.
 
@@ -50,12 +52,13 @@ Preserve the user's requested scope. If the core claim cannot be identified with
 10. Resolve conflicting counts, dates or taxonomies using the closest primary record. Keep the competing version in the conflict log when it materially affects publication.
 11. Assign script use as direct, attributed or prohibited. Safe wording must preserve every necessary attribution and limitation.
 12. For a case study, comparison, implementation story or request about what others can learn, run the transferability gate. Read [references/transferability-analysis.md](references/transferability-analysis.md), then identify the operational mechanism, reusable lessons, applicability conditions, failure conditions, non-reusable elements, implementation difficulty, minimum viable pilot and evaluation signals. Every lesson must cite supporting claim IDs and label whether it is source-established, bounded synthesis or an implementation hypothesis.
-13. Keep the layers separate. A sourced case fact may be direct or attributed; a bounded synthesis must be labeled as analysis and stay within its supporting claims; an implementation hypothesis cannot become a script-ready lesson until independently verified or explicitly framed as a hypothesis.
-14. Set the publication gate:
+13. Produce a first-class `implementation_path` for every applicable case. Start from the lowest-automation credible pilot, then add later stages only when prerequisites and exit criteria are explicit. Label the path as `editorial_guidance`, cite the lessons and claims it depends on, state assumptions, human-control points, difficulty and scale gates. If evidence is insufficient, output `insufficient_evidence` with blockers instead of silently omitting the path.
+14. Keep the layers separate. A sourced case fact may be direct or attributed; a bounded synthesis must be labeled as analysis and stay within its supporting claims; an implementation path is evidence-bounded guidance, not a verified description of what the case company did. An implementation hypothesis cannot become a script-ready lesson until independently verified or explicitly framed as a hypothesis.
+15. Set the publication gate:
    - pass: the core thesis is supported and all publishable claims have safe wording;
    - conditional: a usable evidence base exists, but named claims must be excluded or qualified;
    - blocked: the core thesis depends on evidence that is missing, disputed, false or materially contradictory.
-15. Produce the three outputs and validate `fact_card.json`. New and revised cards use schema version `1.2`; legacy `1.0` and `1.1` cards remain readable but must be upgraded when revised.
+16. Produce the three outputs and validate `fact_card.json`. New and revised cards use schema version `1.3`; legacy `1.0`–`1.2` cards remain readable but must be upgraded when revised.
 
 ## Evidence rules
 
@@ -69,6 +72,7 @@ Preserve the user's requested scope. If the core claim cannot be identified with
 - A later official disclosure may validate a claim without making it part of an earlier rollout. Preserve both the evidence status and the event stage.
 - Inference is allowed only when labeled as inference and when the supporting facts are listed.
 - A transferable lesson is not a new historical fact. Label it as bounded synthesis, cite the claims it depends on and state when it may not transfer.
+- An implementation path is guidance derived from lessons, not another claim. Use conditional language, expose assumptions and never attribute the path to the case source unless the source directly describes it.
 - Do not infer implementation simplicity from a polished case description. Assess difficulty from concrete dependencies such as channels, data access, permissions, integrations, human review and operating change; otherwise mark it unknown.
 - Never add precise numbers, duration, causal consequences, superlatives or universal scope that the sources do not establish.
 
@@ -80,9 +84,9 @@ Produce:
     fact_card.md
     sources.md
 
-fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it. Version `1.2` adds a structured transferability layer to the temporal search, upstream traces, negative-claim audits and revision recheck introduced in `1.1`.
+fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it. Version `1.3` adds a required implementation path for applicable case analyses to the transferability layer introduced in `1.2`.
 
-fact_card.md is the readable rendering of the same evidence. It must include the conclusion, event boundary, timeline when relevant, claim-status table, conflicts, unknowns, safe wording and prohibited wording. When transferability applies, it must also show the case mechanism, reusable lessons, conditions, difficulty, minimum pilot and evaluation signals while clearly labeling synthesis versus source fact.
+fact_card.md is the readable rendering of the same evidence. It must include the conclusion, event boundary, timeline when relevant, claim-status table, conflicts, unknowns, safe wording and prohibited wording. When transferability applies, it must also show the case mechanism, reusable lessons, conditions, difficulty, staged implementation path, human-control points, scale gates and evaluation signals while clearly labeling source fact, synthesis and guidance.
 
 sources.md must list actual source pages, source tier, publisher, date, access date, independence group, supported claim IDs and source limitations. It must also summarize temporal coverage, unresolved upstream traces and negative-search boundaries. Link to source pages rather than search results.
 
@@ -110,5 +114,7 @@ Do not report completion until:
 - every case-based card answers what is worth learning, why it may transfer, where it may fail and how difficult it is to implement;
 - every transferable lesson references valid claim IDs and distinguishes source-established practice from bounded synthesis;
 - implementation hypotheses and unknown difficulty are not presented as proven recommendations;
+- every applicable case includes a non-empty staged implementation path, or an explicit `insufficient_evidence` status with blockers;
+- implementation stages cite valid lesson or claim IDs and expose prerequisites, human control and exit criteria;
 - fact_card.md and sources.md agree with fact_card.json;
 - the JSON validator passes.

@@ -1,6 +1,6 @@
 interface:
   display_name: "视频脚本写作"
   short_description: "把已审案例经验写成有利益钩子、可复用的口播稿"
-  default_prompt: "Use $video-script-writer to turn this approved fact card into a finished spoken-video script. For case-based work, select one permitted transferable lesson, connect it to a real audience consequence, preserve its conditions and implementation difficulty, keep products secondary to the method, finalize narration as the source of truth, and validate the claim-and-lesson handoff."
+  default_prompt: "Use $video-script-writer to turn this approved fact card into a finished spoken-video script. For case-based work, select one permitted transferable lesson, connect it to a real audience consequence, preserve its conditions and implementation difficulty, and use the fact card's staged implementation path as clearly framed guidance rather than case fact. Keep products secondary to the method, finalize narration as the source of truth, and validate the claim-and-lesson handoff."
 policy:
   allow_implicit_invocation: true

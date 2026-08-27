@@ -14,6 +14,7 @@ Bridge the gap between a verified case and a script-ready business lesson withou
 6. Which case-specific parts should not be copied?
 7. How difficult is the minimum credible implementation?
 8. What should a pilot measure before expansion?
+9. What staged implementation path can another organization credibly follow?
 
 ## Three evidence layers
 
@@ -22,6 +23,7 @@ Keep these layers explicit:
 - `source_established`: the source directly describes the practice, boundary, dependency or result. Cite the supporting claim IDs and preserve attribution where required.
 - `bounded_synthesis`: an analyst's transferable conclusion drawn from named verified claims. It may be script-ready as editorial synthesis when the reasoning is explicit and its conditions are stated.
 - `implementation_hypothesis`: a proposed application, product path or operating design not established by the case evidence. Keep it context-only until separately verified; never present it as what the case proved.
+- `implementation_guidance`: an analyst-designed path derived from permitted lessons. It may be handed to the writer as a clearly framed recommendation, but it is not a verified historical claim and must expose assumptions and dependencies.
 
 ## Transferability gate
 
@@ -61,6 +63,30 @@ The minimum pilot should test the transferable mechanism, not imitate the final 
 - performance differs across relevant groups;
 - the required channel and data permissions actually exist.
 
+## Implementation path contract
+
+For every applicable case, produce `transferability.implementation_path`. Do not leave the implementation path implicit inside lesson notes.
+
+Use one of these statuses:
+
+- `ready`: the evidence and stated assumptions support a credible staged path.
+- `conditional`: a path can be proposed, but named dependencies or permissions must be confirmed.
+- `insufficient_evidence`: no responsible path can be proposed; list the blockers and do not invent stages.
+- `not_applicable`: transferability is not applicable to this fact card.
+
+For `ready` or `conditional`, begin with the lowest-automation stage that tests the mechanism. Each stage must state:
+
+- its objective and concrete actions;
+- supporting lesson IDs and claim IDs;
+- prerequisites and assumptions;
+- what remains under human control;
+- implementation difficulty;
+- exit criteria required before moving to the next stage.
+
+The stages should describe capability maturity, not advertise products. Named tools belong only when the user requested them and their required capabilities were verified.
+
+The path must end with scale gates covering efficiency, quality and risk when relevant. A polished vendor workflow is not evidence that the path is simple.
+
 ## Handoff to writing
 
-The fact card should give the writer a small number of ranked lessons, not an inventory of every possible takeaway. Each script-ready lesson must retain its supporting claim IDs, evidence layer and scope. The writer may choose an angle among those lessons but must not upgrade a conditional lesson into a universal recommendation.
+The fact card should give the writer a small number of ranked lessons, not an inventory of every possible takeaway. Each script-ready lesson must retain its supporting claim IDs, evidence layer and scope. Pass the implementation path separately as `editorial_guidance`, so the writer can recommend what an organization could try without implying that the case proved this exact path. The writer may choose an angle among permitted lessons but must not upgrade a conditional lesson or path into a universal recommendation.

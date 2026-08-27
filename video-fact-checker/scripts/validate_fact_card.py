@@ -100,13 +100,13 @@ def main() -> int:
     if data.get("publication_status") in {"pass", "conditional"} and usable_claims == 0:
         errors.append("pass or conditional fact card requires at least one usable claim")
 
-    if schema_version in {"1.0", "1.1"}:
+    if schema_version in {"1.0", "1.1", "1.2"}:
         print(
-            f"WARN: schema {schema_version} is legacy; upgrade to 1.2 when revising this card",
+            f"WARN: schema {schema_version} is legacy; upgrade to 1.3 when revising this card",
             file=sys.stderr,
         )
 
-    if schema_version in {"1.1", "1.2"}:
+    if schema_version in {"1.1", "1.2", "1.3"}:
         audit = data.get("verification_audit", {})
         temporal = audit.get("temporal_search", {})
         temporal_claim_types = {"number", "quote", "chronology", "causality", "forecast"}
@@ -192,7 +192,7 @@ def main() -> int:
 
     transferability = data.get("transferability", {})
     lessons = transferability.get("lessons", [])
-    if schema_version == "1.2":
+    if schema_version in {"1.2", "1.3"}:
         mechanism_claim_ids = transferability.get("mechanism_claim_ids", [])
         unknown_mechanism_claims = sorted(set(mechanism_claim_ids) - claim_id_set)
         if unknown_mechanism_claims:
@@ -244,6 +244,69 @@ def main() -> int:
             if not lesson.get("evaluation_signals"):
                 errors.append(f"{lesson_id}: transferable lesson requires evaluation_signals")
 
+    implementation_path = transferability.get("implementation_path", {})
+    stages = implementation_path.get("stages", [])
+    if schema_version == "1.3":
+        path_status = implementation_path.get("status")
+        applicable = transferability.get("applicable")
+        if applicable is True and path_status == "not_applicable":
+            errors.append("applicable transferability cannot use a not_applicable implementation path")
+        if applicable is False and path_status != "not_applicable":
+            errors.append("non-applicable transferability requires implementation_path.status=not_applicable")
+        if path_status in {"ready", "conditional"}:
+            if not stages:
+                errors.append(f"implementation_path.status={path_status} requires at least one stage")
+            if not implementation_path.get("scale_gates"):
+                errors.append(f"implementation_path.status={path_status} requires scale_gates")
+        if path_status == "conditional" and not implementation_path.get("assumptions"):
+            errors.append("conditional implementation path requires assumptions")
+        if path_status == "insufficient_evidence":
+            if stages:
+                errors.append("insufficient_evidence implementation path must not contain stages")
+            if not implementation_path.get("blockers"):
+                errors.append("insufficient_evidence implementation path requires blockers")
+        if path_status == "not_applicable" and stages:
+            errors.append("not_applicable implementation path must not contain stages")
+
+        lesson_id_set = {lesson.get("id") for lesson in lessons}
+        stage_ids = [stage.get("id") for stage in stages]
+        if len(stage_ids) != len(set(stage_ids)):
+            errors.append("implementation path stage IDs must be unique")
+        for stage in stages:
+            stage_id = stage.get("id", "<missing>")
+            stage_lesson_ids = stage.get("supporting_lesson_ids", [])
+            stage_claim_ids = stage.get("supporting_claim_ids", [])
+            unknown_lessons = sorted(set(stage_lesson_ids) - lesson_id_set)
+            unknown_claims = sorted(set(stage_claim_ids) - claim_id_set)
+            if unknown_lessons:
+                errors.append(f"{stage_id}: unknown supporting lesson IDs {unknown_lessons}")
+            if unknown_claims:
+                errors.append(f"{stage_id}: unknown supporting claim IDs {unknown_claims}")
+            if not stage_lesson_ids and not stage_claim_ids:
+                errors.append(f"{stage_id}: implementation stage requires lesson or claim support")
+            disallowed_lessons = sorted(
+                lesson_id
+                for lesson_id in stage_lesson_ids
+                if next(
+                    (
+                        lesson.get("handoff_use")
+                        for lesson in lessons
+                        if lesson.get("id") == lesson_id
+                    ),
+                    None,
+                )
+                not in {"script_ready", "conditional"}
+            )
+            if disallowed_lessons:
+                errors.append(f"{stage_id}: implementation stage uses disallowed lessons {disallowed_lessons}")
+            prohibited_claims = sorted(
+                claim_id
+                for claim_id in stage_claim_ids
+                if claims_by_id.get(claim_id, {}).get("script_use") == "prohibited"
+            )
+            if prohibited_claims:
+                errors.append(f"{stage_id}: implementation stage uses prohibited claims {prohibited_claims}")
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
@@ -252,6 +315,7 @@ def main() -> int:
     print(
         f"OK: schema={schema_version}, {len(claims)} claims, {len(sources)} sources, "
         f"{usable_claims} script-usable claims, {len(lessons)} transferable lessons, "
+        f"{len(stages)} implementation stages, "
         f"status={data.get('publication_status')}"
     )
     return 0

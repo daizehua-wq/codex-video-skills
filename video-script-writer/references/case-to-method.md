@@ -24,6 +24,8 @@ The lesson must:
 
 If several lessons matter, rank them. Use one as the thesis; other lessons may support it only when removing them would create a real gap. Do not write a catalogue of takeaways.
 
+Then read `fact_card.transferability.implementation_path`. A `ready` or `conditional` path is guidance, not a sourced description of the case company's rollout. Preserve its assumptions, human-control points, difficulty and exit criteria. If its status is `insufficient_evidence`, state the blocker rather than inventing missing stages.
+
 ## Case-to-method spine
 
 Use this shape when it fits the selected lesson:
@@ -32,7 +34,7 @@ Use this shape when it fits the selected lesson:
 2. **Case mechanism:** the minimum facts showing what the organization did differently.
 3. **Transferable lesson:** the operational principle supported by that mechanism.
 4. **Applicability boundary:** when the lesson works, when it fails and what is case-specific.
-5. **Implementation path:** the lowest-risk first version, then later stages only when necessary.
+5. **Implementation path:** use the fact card's staged guidance, beginning with the lowest-risk version and advancing only when its exit criteria are met.
 6. **Difficulty:** what makes implementation simple, moderate, complex or unknown.
 7. **Scale gate:** what efficiency, quality and risk signals must improve before expansion.
 

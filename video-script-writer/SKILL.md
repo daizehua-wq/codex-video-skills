@@ -43,7 +43,7 @@ Require an approved `fact_card.json`. An optional brief may specify audience, ta
 - If `publication_status` is `blocked`, do not write a publishable script. Report which core claims must return to fact checking.
 - If it is `conditional`, use only script-usable claims and obey every attribution and scope limitation.
 - If the requested angle depends on a prohibited or missing claim, identify the gap instead of improvising around it.
-- For a case-based script, require fact-card schema `1.2` transferability analysis with at least one `script_ready` or compatible `conditional` lesson. If a legacy card lacks that layer, return it to fact checking instead of deriving business advice from raw claims.
+- For a case-based script, require fact-card schema `1.3` transferability analysis with at least one `script_ready` or compatible `conditional` lesson and a first-class `implementation_path`. If a legacy card lacks that layer, return it to fact checking instead of deriving business advice or an implementation route from raw claims.
 - A `conditional` lesson may be used only when its applicability, failure conditions and difficulty are preserved. Never promote an `implementation_hypothesis` or `context_only` lesson into the narration.
 - If the user does not set a target duration, do not invent one. Let the necessary explanation determine length; estimate duration only after the narration is complete.
 
@@ -64,7 +64,7 @@ Write and stabilize the narration before producing the explanatory package. Duri
 ## Writing workflow
 
 1. Read `fact_card.json` and freeze the permitted claim pool and lesson pool: usable assertions, transferable lessons, context-only material and prohibited material. A usable item is not automatically necessary.
-2. For case-based work, read [references/case-to-method.md](references/case-to-method.md). Run the **lesson gate** before drafting: select one central `script_ready` lesson, or one compatible `conditional` lesson with its conditions intact. State the audience decision it informs and why this case is evidence for it.
+2. For case-based work, read [references/case-to-method.md](references/case-to-method.md). Run the **lesson gate** before drafting: select one central `script_ready` lesson, or one compatible `conditional` lesson with its conditions intact. Then inspect `implementation_path`: use `ready` or `conditional` stages only as explicitly framed guidance, and surface blockers when the path is `insufficient_evidence`.
 3. Run a **title-and-causality gate**. If the requested angle presupposes a cause, comparison, totality, lesson or conclusion the fact card cannot support, narrow or replace the angle before drafting.
 4. Lock the **core thesis**: one core question, why the target viewer cares, the selected transferable lesson, its implementation difficulty and the final evidence-supported judgment.
 5. Build the minimum proof spine: audience consequence or decision → necessary case fact → mechanism → transferable lesson → applicability boundary → implementation path or difficulty → scale judgment. Keep a fact only when removing it would weaken that spine.
@@ -139,6 +139,7 @@ Preserve information progression: every paragraph should reveal a new fact, expl
 - do not narrate cross-validation, source-ledger comparisons or unused conflicts merely to prove that research was performed;
 - do not introduce an irrelevant fact and then spend narration explaining why it cannot support the conclusion.
 - do not turn a case-specific product configuration into the transferable lesson; name products only when the audience decision genuinely depends on them;
+- do not omit the fact card's implementation path when the user asks how to apply the lesson; frame its stages as recommendations rather than as case facts;
 - preserve each used lesson's `applies_when`, `fails_when`, non-reusable elements and implementation difficulty at the level needed to prevent overgeneralization;
 - distinguish what the case demonstrated from the writer's bounded synthesis with an audible transition.
 
