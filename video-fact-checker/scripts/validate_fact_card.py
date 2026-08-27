@@ -200,13 +200,13 @@ def main() -> int:
     if data.get("publication_status") in {"pass", "conditional"} and usable_claims == 0:
         errors.append("pass or conditional fact card requires at least one usable claim")
 
-    if schema_version in {"1.0", "1.1", "1.2"}:
+    if schema_version in {"1.0", "1.1", "1.2", "1.3"}:
         print(
-            f"WARN: schema {schema_version} is legacy; upgrade to 1.3 when revising this card",
+            f"WARN: schema {schema_version} is legacy; upgrade to 1.4 when revising this card",
             file=sys.stderr,
         )
 
-    if schema_version in {"1.1", "1.2", "1.3"}:
+    if schema_version in {"1.1", "1.2", "1.3", "1.4"}:
         audit = data.get("verification_audit", {})
         temporal = audit.get("temporal_search", {})
         temporal_claim_types = {"number", "quote", "chronology", "causality", "forecast"}
@@ -292,7 +292,54 @@ def main() -> int:
 
     transferability = data.get("transferability", {})
     lessons = transferability.get("lessons", [])
-    if schema_version in {"1.2", "1.3"}:
+    if schema_version == "1.4":
+        event_overview = data.get("event_overview")
+        if isinstance(event_overview, dict):
+            event_applicable = event_overview.get("applicable")
+            case_applicable = transferability.get("applicable")
+            if event_applicable is not case_applicable:
+                errors.append(
+                    "event_overview.applicable must match transferability.applicable in schema 1.4"
+                )
+
+            for dimension in ("who", "what", "when", "where", "why", "how", "outcome"):
+                item = event_overview.get(dimension, {})
+                status = item.get("status")
+                supporting_claim_ids = item.get("supporting_claim_ids", [])
+                unknown_supports = sorted(set(supporting_claim_ids) - claim_id_set)
+                if unknown_supports:
+                    errors.append(
+                        f"event_overview.{dimension}: unknown supporting claim IDs {unknown_supports}"
+                    )
+
+                if event_applicable is True:
+                    if status == "not_applicable":
+                        errors.append(
+                            f"event_overview.{dimension}: case overview cannot use not_applicable"
+                        )
+                    if status in {"supported", "partially_supported"} and not supporting_claim_ids:
+                        errors.append(
+                            f"event_overview.{dimension}: {status} requires supporting_claim_ids"
+                        )
+                    if status == "not_found" and supporting_claim_ids:
+                        errors.append(
+                            f"event_overview.{dimension}: not_found must not cite supporting claims"
+                        )
+                    prohibited_supports = sorted(
+                        claim_id
+                        for claim_id in supporting_claim_ids
+                        if claims_by_id.get(claim_id, {}).get("script_use") == "prohibited"
+                    )
+                    if prohibited_supports:
+                        errors.append(
+                            f"event_overview.{dimension}: uses prohibited claims {prohibited_supports}"
+                        )
+                elif status != "not_applicable":
+                    errors.append(
+                        f"event_overview.{dimension}: non-case mode requires not_applicable"
+                    )
+
+    if schema_version in {"1.2", "1.3", "1.4"}:
         mechanism_claim_ids = transferability.get("mechanism_claim_ids", [])
         unknown_mechanism_claims = sorted(set(mechanism_claim_ids) - claim_id_set)
         if unknown_mechanism_claims:
@@ -346,7 +393,7 @@ def main() -> int:
 
     implementation_path = transferability.get("implementation_path", {})
     stages = implementation_path.get("stages", [])
-    if schema_version == "1.3":
+    if schema_version in {"1.3", "1.4"}:
         path_status = implementation_path.get("status")
         applicable = transferability.get("applicable")
         if applicable is True and path_status == "not_applicable":

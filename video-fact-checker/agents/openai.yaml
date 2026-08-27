@@ -1,6 +1,6 @@
 interface:
   display_name: "视频事实审查"
   short_description: "即插即用地核验事实、提炼经验并生成实施路径"
-  default_prompt: "Use $video-fact-checker to automatically choose claim-verification or case-analysis mode, verify this material, and produce a validated fact card with transferable lessons and an implementation path whenever the request is case-based."
+  default_prompt: "Use $video-fact-checker to automatically choose claim-verification or case-analysis mode, verify this material, and produce a validated fact card. For case-based work, first provide a claim-linked 5W1H event overview, then transferable lessons and an implementation path."
 policy:
   allow_implicit_invocation: true

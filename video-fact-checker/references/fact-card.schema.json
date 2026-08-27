@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "project_id", "topic", "checked_at", "publication_status", "summary", "scope", "claims", "sources", "conflicts", "open_questions"],
   "properties": {
-    "schema_version": {"enum": ["1.0", "1.1", "1.2", "1.3"]},
+    "schema_version": {"enum": ["1.0", "1.1", "1.2", "1.3", "1.4"]},
     "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
     "topic": {"type": "string", "minLength": 1},
     "checked_at": {"type": "string", "format": "date"},
@@ -18,6 +18,85 @@
       "properties": {
         "included": {"type": "array", "items": {"type": "string", "minLength": 1}},
         "excluded": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "event_overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicable", "who", "what", "when", "where", "why", "how", "outcome", "notes"],
+      "properties": {
+        "applicable": {"type": "boolean"},
+        "who": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "what": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "when": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "where": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "why": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "how": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "status", "supporting_claim_ids"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "status": {"enum": ["supported", "partially_supported", "not_found", "not_applicable"]},
+            "supporting_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}}
+          }
+        },
+        "notes": {"type": "string"}
       }
     },
     "verification_audit": {
@@ -227,6 +306,15 @@
       "if": {"properties": {"schema_version": {"const": "1.3"}}},
       "then": {
         "required": ["verification_audit", "transferability"],
+        "properties": {
+          "transferability": {"required": ["implementation_path"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"schema_version": {"const": "1.4"}}},
+      "then": {
+        "required": ["verification_audit", "event_overview", "transferability"],
         "properties": {
           "transferability": {"required": ["implementation_path"]}
         }

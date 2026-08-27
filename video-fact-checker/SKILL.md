@@ -14,6 +14,7 @@ This skill owns:
 - breaking the supplied topic into checkable claims;
 - locating and ranking sources;
 - checking entities, dates, numbers, quotations, product identity, chronology, causality and scope;
+- reconstructing an evidence-bounded 5W1H event overview before analyzing a case;
 - separating source statements from independently verified facts;
 - documenting conflicts, unknowns, safe wording and prohibited wording;
 - extracting evidence-bounded operational lessons from verified case facts;
@@ -44,10 +45,10 @@ The copied skill directory must work on a stock Python 3.7+ runtime. Do not requ
 
 Select the operating mode from the request without asking the user to configure it:
 
-- **Case analysis:** use when the input concerns a company case, implementation story, comparison, lessons for other organizations, reuse, difficulty or how to implement. Set `transferability.applicable` to `true`, run the transferability gate and produce `implementation_path`.
+- **Case analysis:** use when the input concerns a company case, implementation story, comparison, lessons for other organizations, reuse, difficulty or how to implement. Set both `event_overview.applicable` and `transferability.applicable` to `true`, complete the event-overview gate, run the transferability gate and produce `implementation_path`.
 - **Claim verification:** use for a standalone claim, quotation, number or event with no requested organizational lesson. Set `transferability.applicable` to `false` and `implementation_path.status` to `not_applicable`.
 
-Default to the current schema (`1.3`) in both modes. Never downgrade the schema because a runtime dependency is missing, and never silently omit the implementation path. A user only needs to provide the topic, source material or draft to be checked; no custom invocation prompt is required.
+Default to the current schema (`1.4`) in both modes. In claim-verification mode, set `event_overview.applicable` to `false` and every event-overview dimension to `not_applicable`. Never downgrade the schema because a runtime dependency is missing, and never silently omit the event overview or implementation path. A user only needs to provide the topic, source material or draft to be checked; no custom invocation prompt is required.
 
 ## Verification workflow
 
@@ -62,14 +63,15 @@ Default to the current schema (`1.3`) in both modes. Never downgrade the schema 
 9. Check scope in both directions: do not broaden a single case into a company-wide result, narrow a qualified statement into an absolute one, or merge metrics from different rollout stages, product versions or measurement windows.
 10. Resolve conflicting counts, dates or taxonomies using the closest primary record. Keep the competing version in the conflict log when it materially affects publication.
 11. Assign script use as direct, attributed or prohibited. Safe wording must preserve every necessary attribution and limitation.
-12. For a case study, comparison, implementation story or request about what others can learn, run the transferability gate. Read [references/transferability-analysis.md](references/transferability-analysis.md), then identify the operational mechanism, reusable lessons, applicability conditions, failure conditions, non-reusable elements, implementation difficulty, minimum viable pilot and evaluation signals. Every lesson must cite supporting claim IDs and label whether it is source-established, bounded synthesis or an implementation hypothesis.
-13. Produce a first-class `implementation_path` for every applicable case. Start from the lowest-automation credible pilot, then add later stages only when prerequisites and exit criteria are explicit. Label the path as `editorial_guidance`, cite the lessons and claims it depends on, state assumptions, human-control points, difficulty and scale gates. If evidence is insufficient, output `insufficient_evidence` with blockers instead of silently omitting the path.
-14. Keep the layers separate. A sourced case fact may be direct or attributed; a bounded synthesis must be labeled as analysis and stay within its supporting claims; an implementation path is evidence-bounded guidance, not a verified description of what the case company did. An implementation hypothesis cannot become a script-ready lesson until independently verified or explicitly framed as a hypothesis.
-15. Set the publication gate:
+12. For a case study, comparison or implementation story, run the **event-overview gate before transferability analysis**. Fill Who, What, When, Where, Why and How, plus Outcome. Here `where` may be the organization, business unit, process or system context rather than a geographic place. Each supported or partially supported dimension must cite publishable claim IDs; use `not_found` when evidence is missing and state the gap plainly instead of filling it by inference. The overview must let a reader understand the event without reading the claim table.
+13. For a case study, comparison, implementation story or request about what others can learn, run the transferability gate. Read [references/transferability-analysis.md](references/transferability-analysis.md), then identify the operational mechanism, reusable lessons, applicability conditions, failure conditions, non-reusable elements, implementation difficulty, minimum viable pilot and evaluation signals. Every lesson must cite supporting claim IDs and label whether it is source-established, bounded synthesis or an implementation hypothesis.
+14. Produce a first-class `implementation_path` for every applicable case. Start from the lowest-automation credible pilot, then add later stages only when prerequisites and exit criteria are explicit. Label the path as `editorial_guidance`, cite the lessons and claims it depends on, state assumptions, human-control points, difficulty and scale gates. If evidence is insufficient, output `insufficient_evidence` with blockers instead of silently omitting the path.
+15. Keep the layers separate. A sourced case fact may be direct or attributed; the event overview is a concise rendering of those facts, not a new evidence layer; a bounded synthesis must be labeled as analysis and stay within its supporting claims; an implementation path is evidence-bounded guidance, not a verified description of what the case company did. An implementation hypothesis cannot become a script-ready lesson until independently verified or explicitly framed as a hypothesis.
+16. Set the publication gate:
    - pass: the core thesis is supported and all publishable claims have safe wording;
    - conditional: a usable evidence base exists, but named claims must be excluded or qualified;
    - blocked: the core thesis depends on evidence that is missing, disputed, false or materially contradictory.
-16. Produce the three outputs and validate `fact_card.json`. New and revised cards use schema version `1.3`; legacy `1.0`–`1.2` cards remain readable but must be upgraded when revised.
+17. Produce the three outputs and validate `fact_card.json`. New and revised cards use schema version `1.4`; legacy `1.0`–`1.3` cards remain readable but must be upgraded when revised.
 
 ## Evidence rules
 
@@ -83,6 +85,7 @@ Default to the current schema (`1.3`) in both modes. Never downgrade the schema 
 - A later official disclosure may validate a claim without making it part of an earlier rollout. Preserve both the evidence status and the event stage.
 - Inference is allowed only when labeled as inference and when the supporting facts are listed.
 - A transferable lesson is not a new historical fact. Label it as bounded synthesis, cite the claims it depends on and state when it may not transfer.
+- An event overview is not a substitute for the claim ledger. Preserve attribution and scope in its wording, cite only publishable claims for supported dimensions, and mark missing dimensions `not_found` rather than inventing connective detail.
 - An implementation path is guidance derived from lessons, not another claim. Use conditional language, expose assumptions and never attribute the path to the case source unless the source directly describes it.
 - Do not infer implementation simplicity from a polished case description. Assess difficulty from concrete dependencies such as channels, data access, permissions, integrations, human review and operating change; otherwise mark it unknown.
 - Never add precise numbers, duration, causal consequences, superlatives or universal scope that the sources do not establish.
@@ -95,9 +98,9 @@ Produce:
     fact_card.md
     sources.md
 
-fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it. Version `1.3` adds a required implementation path for applicable case analyses to the transferability layer introduced in `1.2`.
+fact_card.json is the machine handoff to the script-writing skill. Read [references/fact-card.schema.json](references/fact-card.schema.json) before creating or repairing it. Version `1.4` adds a required, claim-linked event overview for case analyses while retaining the transferability and implementation-path layers introduced in `1.2` and `1.3`.
 
-fact_card.md is the readable rendering of the same evidence. It must include the conclusion, event boundary, timeline when relevant, claim-status table, conflicts, unknowns, safe wording and prohibited wording. When transferability applies, it must also show the case mechanism, reusable lessons, conditions, difficulty, staged implementation path, human-control points, scale gates and evaluation signals while clearly labeling source fact, synthesis and guidance.
+fact_card.md is the readable rendering of the same evidence. It must include the conclusion, event boundary, timeline when relevant, claim-status table, conflicts, unknowns, safe wording and prohibited wording. For a case analysis, use this default reading order unless the user requests another: conclusion; 5W1H event description and outcome; event boundary or timeline; conflicts and easy-to-misstate points; case mechanism; reusable lessons; conditions and difficulty; staged implementation path; risks, open questions and prohibited wording; final judgment; core claim-status table as the evidence appendix. The claim table may remain earlier for standalone claim verification. Clearly label source fact, synthesis and guidance throughout.
 
 sources.md must list actual source pages, source tier, publisher, date, access date, independence group, supported claim IDs and source limitations. It must also summarize temporal coverage, unresolved upstream traces and negative-search boundaries. Link to source pages rather than search results.
 
@@ -126,6 +129,9 @@ Do not report completion until:
 - conflicts and unknowns are visible rather than silently resolved;
 - safe wording does not outrun the cited evidence;
 - prohibited claims cannot be mistaken for publishable facts;
+- every case-based card provides Who, What, When, Where, Why and How plus Outcome before drawing lessons, and explicitly marks any missing dimension `not_found`;
+- every supported or partially supported event-overview dimension cites valid, publishable claim IDs and preserves their attribution and scope;
+- a reader can understand the event from the overview without first decoding the core claim table;
 - every case-based card answers what is worth learning, why it may transfer, where it may fail and how difficult it is to implement;
 - every transferable lesson references valid claim IDs and distinguishes source-established practice from bounded synthesis;
 - implementation hypotheses and unknown difficulty are not presented as proven recommendations;
