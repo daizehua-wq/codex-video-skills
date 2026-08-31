@@ -1,6 +1,6 @@
 ---
 name: video-script-writer
-description: Write concise, conversational factual-video scripts from an approved fact_card.json, using its evidence-bounded transferable lessons when the topic is case-based. Build an honest audience-stakes hook, a clear case-to-method argument and a traceable handoff without inventing evidence or duration. Use after fact checking for hooks, scripts, structure or revisions. Do not research missing facts, upgrade lesson status or plan visuals.
+description: Write concise, conversational factual-video scripts from an approved fact_card.json, using its evidence-bounded transferable lessons when the topic is case-based. For Chinese narration, use native spoken-Chinese information order instead of translated report prose. Build an honest audience-stakes hook, a clear case-to-method argument and a traceable handoff without inventing evidence or duration. Use after fact checking for hooks, scripts, structure or revisions. Do not research missing facts, upgrade lesson status or plan visuals.
 ---
 
 # Video Script Writer
@@ -43,7 +43,7 @@ Require an approved `fact_card.json`. An optional brief may specify audience, ta
 - If `publication_status` is `blocked`, do not write a publishable script. Report which core claims must return to fact checking.
 - If it is `conditional`, use only script-usable claims and obey every attribution and scope limitation.
 - If the requested angle depends on a prohibited or missing claim, identify the gap instead of improvising around it.
-- For a case-based script, require fact-card schema `1.3` or `1.4` transferability analysis with at least one `script_ready` or compatible `conditional` lesson and a first-class `implementation_path`. For `1.4`, also require the case-mode `event_overview`; if a legacy card lacks the required layer, return it to fact checking instead of deriving the event description, business advice or implementation route from raw claims.
+- For a case-based script, require fact-card schema `1.3`, `1.4` or `1.5` transferability analysis with at least one `script_ready` or compatible `conditional` lesson and a first-class `implementation_path`. For `1.4` and `1.5`, also require the case-mode `event_overview`; if a legacy card lacks the required layer, return it to fact checking instead of deriving the event description, business advice or implementation route from raw claims. For `1.5`, honor every claim's stage, metric, causality, title, attribution and handoff controls; use the single primary lesson as the default main line unless the user's requested angle requires another permitted lesson.
 - A `conditional` lesson may be used only when its applicability, failure conditions and difficulty are preserved. Never promote an `implementation_hypothesis` or `context_only` lesson into the narration.
 - If the user does not set a target duration, do not invent one. Let the necessary explanation determine length; estimate duration only after the narration is complete.
 
@@ -63,23 +63,24 @@ Write and stabilize the narration before producing the explanatory package. Duri
 
 ## Writing workflow
 
-1. Read `fact_card.json` and freeze the permitted claim pool and lesson pool: usable assertions, transferable lessons, context-only material and prohibited material. When schema `1.4` provides a case-mode `event_overview`, use it as the evidence-bounded event spine; do not reconstruct a competing 5W1H account from scattered claims. A usable item is not automatically necessary.
+1. Read `fact_card.json` and freeze the permitted claim pool and lesson pool: usable assertions, transferable lessons, context-only material and prohibited material. When schema `1.4` or `1.5` provides a case-mode `event_overview`, use it as the evidence-bounded event spine; do not reconstruct a competing 5W1H account from scattered claims. For schema `1.5`, build the minimum proof spine from `core_proof`, keep `required_boundary` close to the claim it limits, treat `optional_context` as removable and exclude `fact_card_only` from narration. A usable item is not automatically necessary.
 2. For case-based work, read [references/case-to-method.md](references/case-to-method.md). Run the **lesson gate** before drafting: select one central `script_ready` lesson, or one compatible `conditional` lesson with its conditions intact. Then inspect `implementation_path`: use `ready` or `conditional` stages only as explicitly framed guidance, and surface blockers when the path is `insufficient_evidence`.
 3. Run a **title-and-causality gate**. If the requested angle presupposes a cause, comparison, totality, lesson or conclusion the fact card cannot support, narrow or replace the angle before drafting.
 4. Lock the **core thesis**: one core question, why the target viewer cares, the selected transferable lesson, its implementation difficulty and the final evidence-supported judgment.
-5. Build the minimum proof spine: audience consequence or decision → necessary case fact → mechanism → transferable lesson → applicability boundary → implementation path or difficulty → scale judgment. Keep a fact only when removing it would weaken that spine.
-6. Delete tangents instead of adding spoken disclaimers to rescue them. If a paragraph mainly explains why its own fact is not evidence, omit the paragraph.
-7. Write the **writing logic** as a concise cognition chain. The case supplies evidence; the transferable lesson supplies the destination. Product names, metrics and implementation details are not the chain by themselves.
-8. Build progressive semantic beats. Each beat needs a role, supporting fact IDs or lesson IDs when applicable, useful new information and a clear transition to the next question or beat.
-9. Read [references/hook-framework.md](references/hook-framework.md). Draft three meaningfully different text-only hook routes and reject any route that outruns the fact card's evidence or lesson capacity.
-10. Write the complete narration as the single source of truth. Each paragraph must perform one new job: create stakes, establish, explain, transfer, bound, apply or conclude. Do not repeat a conclusion in several phrasings.
-11. Run a claim-and-lesson pass: map every checkable assertion, map every transferable takeaway, preserve attribution and conditions, and audit causal, comparative, superlative, universal and quotation language.
-12. Run relevance, neutrality, compression and read-aloud passes. Remove inventory-like facts, premature product detail, repeated abstractions, research-process narration, stiffness and delayed qualifications.
-13. End by answering the opening question, giving the selected transferable takeaway with its boundary and introducing no new factual claim or lesson.
-14. Estimate duration from the final spoken text. Never pad merely to hit runtime.
-15. Run the HKRR review from [references/hkrr.md](references/hkrr.md) and revise until every threshold is met without weakening factual discipline.
-16. Only after the narration is final, derive sections A, B and D plus `script_claims.json` from that exact text.
-17. Write all deliverables, reread the actual files from disk and run the deterministic validator before reporting completion.
+5. When the narration is Chinese, read [references/chinese-spoken-logic.md](references/chinese-spoken-logic.md). Before drafting prose, rebuild the listening order around concrete actors, actions, results, meaning and the next decision. Do not preserve translated report syntax merely because the facts are correct.
+6. Build the minimum proof spine: audience consequence or decision → necessary case fact → mechanism → transferable lesson → applicability boundary → implementation path or difficulty → scale judgment. Keep a fact only when removing it would weaken that spine.
+7. Delete tangents instead of adding spoken disclaimers to rescue them. If a paragraph mainly explains why its own fact is not evidence, omit the paragraph.
+8. Write the **writing logic** as a concise cognition chain. The case supplies evidence; the transferable lesson supplies the destination. Product names, metrics and implementation details are not the chain by themselves.
+9. Build progressive semantic beats. Each beat needs a role, supporting fact IDs or lesson IDs when applicable, useful new information and a clear transition to the next question or beat.
+10. Read [references/hook-framework.md](references/hook-framework.md). Draft three meaningfully different text-only hook routes and reject any route that outruns the fact card's evidence or lesson capacity.
+11. Write the complete narration as the single source of truth. Each paragraph must perform one new job: create stakes, establish, explain, transfer, bound, apply or conclude. Do not repeat a conclusion in several phrasings.
+12. Run a claim-and-lesson pass: map every checkable assertion, map every transferable takeaway, preserve attribution and conditions, and audit causal, comparative, superlative, universal and quotation language.
+13. For Chinese, perform two distinct oral passes: first reorder each paragraph into native listening logic; then rewrite sentences around actors and concrete verbs. Integrate qualifications at first mention, split noun piles and long lists, and remove spoken audit-process language. Only then run relevance, neutrality, compression and actual read-aloud passes.
+14. End by answering the opening question, giving the selected transferable takeaway with its boundary and introducing no new factual claim or lesson.
+15. Estimate duration from the final spoken text. Never pad merely to hit runtime.
+16. Run the HKRR review from [references/hkrr.md](references/hkrr.md) and revise until every threshold is met without weakening factual discipline.
+17. Only after the narration is final, derive sections A, B and D plus `script_claims.json` from that exact text. Record the real oral-delivery review; validator success is not a substitute for reading the narration aloud.
+18. Write all deliverables, reread the actual files from disk and run the deterministic validator before reporting completion.
 
 Read [references/style-profile.md](references/style-profile.md) whenever the user has not supplied a stronger style guide or asks to improve hook strength, pacing, oral delivery, structure or concision.
 
@@ -119,6 +120,21 @@ Use this shape only when it fits the evidence and the user's goal:
 9. transferable takeaway.
 
 Preserve information progression: every paragraph should reveal a new fact, explanation, contrast, boundary or consequence.
+
+## Chinese spoken-logic contract
+
+For Chinese narration, factual accuracy is necessary but not enough. The draft must follow Chinese listening logic rather than preserve an English-style report structure.
+
+- Begin a passage with a person, company, system, problem or action when one is available; introduce the abstract label afterward.
+- Put a material qualifier into the audience's first understanding of a fact. Do not state a broad version and correct it in the next sentence.
+- Keep source fact, explanation and editorial recommendation in adjacent but distinct sentences.
+- Prefer concrete verbs over noun phrases such as “进行审计”, “形成证据”, “实现部署” or “推进规模化”.
+- Break a list into actions, decisions or two memorable control points when the audience cannot retain the raw items after one hearing.
+- Do not simulate orality with filler words, forced questions or slang. The test is whether the logic remains natural after those decorations are removed.
+- Keep required attribution and boundaries, but integrate them into the relevant fact instead of repeatedly narrating “注意”, “口径”, “边界” or the research process.
+- Read the final body aloud at normal speed. Rewrite any sentence that loses its subject, needs a second breath or must be reread to understand.
+
+Use [references/chinese-spoken-logic.md](references/chinese-spoken-logic.md) for the full two-pass method, examples and the Chinese read-aloud gate.
 
 ## Factual writing rules
 
@@ -209,7 +225,7 @@ Produce:
 
 The package and narration must each contain exactly one level-one Markdown heading, and those titles must match. Sections A, B and D may explain editorial choices but may not introduce new facts, stronger causality or claims absent from section C.
 
-`script_claims.json` version `1.3` contains:
+Use `script_claims.json` version `1.3` for fact cards through schema `1.4`. Use version `1.4` for fact-card schema `1.5`. Version `1.4` retains the earlier handoff and additionally records:
 
 - core thesis and writing logic;
 - target audience, style and duration;
@@ -219,13 +235,18 @@ The package and narration must each contain exactly one level-one Markdown headi
 - structured HKRR scores and revision status;
 - factual claim uses and scope handling;
 - transferable lesson uses, preserved conditions and implementation difficulty;
+- title fact IDs, title-limit preservation and any primary-lesson override reason;
+- per-use preservation of event stage, time scope, metric scope, causality, spoken attribution and forbidden transformations;
+- proximity mappings from every required-boundary claim to the factual claim it limits;
+- spoken lesson-boundary anchors plus implementation-stage and parameterization handling;
+- `oral_delivery_review`, including language, Chinese logic-order and actor/action review, qualification placement, abstraction and audit-language review, actual read-aloud revision, unresolved flags and justified exceptions;
 - completion checks.
 
 Run:
 
     python3 scripts/validate_script_handoff.py /path/to/fact_card.json /path/to/narration.md /path/to/script_package.md /path/to/script_claims.json
 
-The validator checks the four-part package, package/narration consistency, schema, claim permissions, exact anchors, narrative-beat order, opening and ending placement, duration arithmetic, HKRR thresholds and completion flags. It cannot judge taste, oral performance or every unsupported implication.
+The validator checks the four-part package, package/narration consistency, schema, claim permissions, exact anchors, narrative-beat order, opening and ending placement, duration arithmetic, HKRR thresholds and completion flags. For fact-card schema `1.5`, it also rejects fact-card-only narration, missing core proof, unmapped or distant required boundaries, title-policy violations, unpreserved metric/causality controls, unbounded lesson use and implementation guidance that loses its stage or parameter basis. For Chinese narration it requires a completed oral review, rejects unexcepted extreme sentence/clause load and excessive audit-process language, and warns on sentences that need another read-aloud pass. It cannot judge taste, natural Chinese or every unsupported implication from text statistics alone.
 
 Do not treat validator success as evidence that the script is mature. A final human-style review must still check necessity, neutrality, spoken clarity and whether research mechanics leaked into narration.
 
@@ -239,9 +260,10 @@ Before declaring the task complete:
 4. confirm every checkable assertion in the final narration is mapped and no prohibited claim appears;
 5. confirm every transferable conclusion maps to a permitted lesson ID and preserves its conditions and difficulty;
 6. search the final narration for causal, comparative, superlative, universal and exact-quotation wording, then justify or narrow each occurrence;
-7. confirm A, B and D describe the actual final narration rather than intended edits;
-8. never write "deleted", "fixed", "verified" or an equivalent completion claim without checking the final artifact state;
-9. run `scripts/validate_script_handoff.py` and treat any failure as unfinished work.
+7. for Chinese, complete the two-pass oral rewrite, read the full body aloud and ensure `oral_delivery_review` records the actual final text rather than an intended pass;
+8. confirm A, B and D describe the actual final narration rather than intended edits;
+9. never write "deleted", "fixed", "verified" or an equivalent completion claim without checking the final artifact state;
+10. run `scripts/validate_script_handoff.py` and treat any failure as unfinished work.
 
 ## Completion gate
 
@@ -265,10 +287,16 @@ Do not report completion until:
 - no prohibited fact is used;
 - quotations, numbers, time ranges and scope match the fact card;
 - abstract lists are concrete, speakable and ordered rather than merely enumerated;
+- Chinese paragraphs follow listener order—actor/problem, action, result, meaning and next decision as applicable—rather than translated report order;
+- Chinese facts carry material qualifiers at first mention, without a broad claim followed by a corrective disclaimer;
+- Chinese sentences prefer actors and concrete verbs, avoid stacked abstract nouns and have passed a real normal-speed read-aloud revision;
+- audit-process words and source mechanics are absent unless the audience needs them to interpret a used claim;
 - the ending answers the opening and adds no new factual claim;
 - the duration estimate is within tolerance of any specified target;
 - no target duration was invented when the user left duration open;
 - source cross-checking, unused conflicts and evidence-ledger commentary remain outside narration unless they materially change a used claim;
+- schema 1.5 `fact_card_only` claims are absent from narration, required boundaries stay close to their claims, and titles obey `title_use` plus `title_limitations`;
+- schema 1.5 numbers preserve their complete metric scope, causal wording obeys `causality_status`, and forbidden transformations do not appear;
 - attribution appears only where required or meaningfully useful;
 - no causal framing is stronger than the fact card's causality status;
 - the four human-facing sections are present and section C exactly matches `narration.md`;

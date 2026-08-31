@@ -102,4 +102,6 @@ Allowed wording must carry all material limitations. In particular:
 - distinguish a product, model, company and campaign with similar names;
 - distinguish a direct quote from a paraphrase.
 
+For schema 1.5, encode these limits in the claim's writing controls as well as prose notes. Plans and announcements must forbid completion language; numeric claims must preserve the recorded metric object, aggregation, population, period and process boundary; sequence-only claims must forbid causal framing; attributed performance must not be presented as independent measurement. Use `handoff_role` to keep audit-only conflicts out of narration unless they materially bound a used claim.
+
 Prohibited wording should capture likely amplification errors, not every imaginable sentence.

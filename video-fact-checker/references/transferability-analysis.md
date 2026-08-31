@@ -89,4 +89,8 @@ The path must end with scale gates covering efficiency, quality and risk when re
 
 ## Handoff to writing
 
-The fact card should give the writer a small number of ranked lessons, not an inventory of every possible takeaway. Each script-ready lesson must retain its supporting claim IDs, evidence layer and scope. Pass the implementation path separately as `editorial_guidance`, so the writer can recommend what an organization could try without implying that the case proved this exact path. The writer may choose an angle among permitted lessons but must not upgrade a conditional lesson or path into a universal recommendation.
+The fact card should give the writer a small number of ranked lessons, not an inventory of every possible takeaway. In schema 1.5, mark exactly one usable lesson `primary`; use `supporting` for evidence-compatible additions and `context` for material that should not compete for the main line. A primary lesson must remain `script_ready` or `conditional`, include the boundary that must be audible in narration and list the generalizations the writer must not make.
+
+Each script-ready lesson must retain its supporting claim IDs, evidence layer and scope. Pass the implementation path separately as `editorial_guidance`, so the writer can recommend what an organization could try without implying that the case proved this exact path. The writer may choose an angle among permitted lessons but must not upgrade a conditional lesson or path into a universal recommendation.
+
+For every implementation stage, classify precise parameters as `none`, `source_bounded` or `analyst_proposed`. Any exact headcount, duration, range or threshold requires a note explaining its basis. Source-bounded parameters cite supporting claims; analyst-proposed parameters remain visibly editorial and must not be described as the case company's practice. Ready and conditional paths must expose scale-gate dimensions covering efficiency, quality and risk.

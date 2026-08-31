@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "project_id", "topic", "checked_at", "publication_status", "summary", "scope", "claims", "sources", "conflicts", "open_questions"],
   "properties": {
-    "schema_version": {"enum": ["1.0", "1.1", "1.2", "1.3", "1.4"]},
+    "schema_version": {"enum": ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5"]},
     "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
     "topic": {"type": "string", "minLength": 1},
     "checked_at": {"type": "string", "format": "date"},
@@ -192,6 +192,9 @@
               "difficulty_drivers": {"type": "array", "items": {"type": "string", "minLength": 1}},
               "minimum_viable_pilot": {"type": "string", "minLength": 1},
               "evaluation_signals": {"type": "array", "items": {"type": "string", "minLength": 1}},
+              "priority": {"enum": ["primary", "supporting", "context"]},
+              "required_spoken_boundary": {"type": "string"},
+              "forbidden_generalizations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
               "notes": {"type": "string"}
             }
           }
@@ -222,11 +225,14 @@
                   "prerequisites": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
                   "human_control": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
                   "implementation_difficulty": {"enum": ["simple", "moderate", "complex", "unknown"]},
-                  "exit_criteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+                  "exit_criteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+                  "parameterization": {"enum": ["none", "source_bounded", "analyst_proposed"]},
+                  "parameter_note": {"type": "string"}
                 }
               }
             },
             "scale_gates": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "scale_gate_dimensions": {"type": "array", "uniqueItems": true, "items": {"enum": ["efficiency", "quality", "risk", "compliance", "adoption"]}},
             "risk_note": {"type": "string", "minLength": 1}
           }
         },
@@ -253,6 +259,48 @@
           "allowed_wording": {"type": "array", "items": {"type": "string", "minLength": 1}},
           "forbidden_wording": {"type": "array", "items": {"type": "string", "minLength": 1}},
           "scope_limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "event_stage": {"enum": ["not_applicable", "planned", "announced", "pilot", "rolling_out", "deployed", "operational", "retrospective_result", "forecast", "current_status", "unknown"]},
+          "temporal_scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "as_of", "start", "end", "notes"],
+            "properties": {
+              "status": {"enum": ["point_in_time", "bounded_period", "ongoing_as_of", "historical", "future_planned", "unknown", "not_applicable"]},
+              "as_of": {"type": ["string", "null"]},
+              "start": {"type": ["string", "null"]},
+              "end": {"type": ["string", "null"]},
+              "notes": {"type": "string"}
+            }
+          },
+          "metric_scope": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["metric_name", "value_text", "subject", "population", "time_window", "baseline_or_comparator", "process_start", "process_end", "aggregation", "measurement_method", "evidence_character", "notes"],
+            "properties": {
+              "metric_name": {"type": "string", "minLength": 1},
+              "value_text": {"type": "string", "minLength": 1},
+              "subject": {"type": "string", "minLength": 1},
+              "population": {"type": ["string", "null"]},
+              "time_window": {"type": ["string", "null"]},
+              "baseline_or_comparator": {"type": ["string", "null"]},
+              "process_start": {"type": ["string", "null"]},
+              "process_end": {"type": ["string", "null"]},
+              "aggregation": {"enum": ["single_case", "average", "median", "maximum", "minimum", "range", "total", "percentage", "rate", "unspecified"]},
+              "measurement_method": {"type": ["string", "null"]},
+              "evidence_character": {"enum": ["official_record", "independent_measurement", "company_reported_performance", "vendor_reported_performance", "joint_case_reported_performance", "participant_self_reported", "award_entry_reported", "unknown"]},
+              "notes": {"type": "string"}
+            }
+          },
+          "causality_status": {"enum": ["not_causal", "source_established", "company_attributed", "sequence_only", "bounded_synthesis", "disputed", "prohibited"]},
+          "handoff_role": {"enum": ["core_proof", "required_boundary", "optional_context", "fact_card_only", "prohibited"]},
+          "spoken_attribution_required": {"type": "boolean"},
+          "title_use": {"enum": ["allowed", "conditional", "prohibited"]},
+          "title_limitations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "forbidden_transformations": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"enum": ["plan_to_completed", "stage_scope_change", "metric_scope_change", "peak_to_average", "subset_to_companywide", "sequence_to_causation", "attributed_to_independent", "case_to_universal", "product_or_scenario_transfer"]}
+          },
           "notes": {"type": "string"}
         }
       }
@@ -317,6 +365,39 @@
         "required": ["verification_audit", "event_overview", "transferability"],
         "properties": {
           "transferability": {"required": ["implementation_path"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"schema_version": {"const": "1.5"}}},
+      "then": {
+        "required": ["verification_audit", "event_overview", "transferability"],
+        "properties": {
+          "claims": {
+            "items": {
+              "required": ["event_stage", "temporal_scope", "metric_scope", "causality_status", "handoff_role", "spoken_attribution_required", "title_use", "title_limitations", "forbidden_transformations"]
+            }
+          },
+          "transferability": {
+            "required": ["implementation_path"],
+            "properties": {
+              "lessons": {
+                "items": {
+                  "required": ["priority", "required_spoken_boundary", "forbidden_generalizations"]
+                }
+              },
+              "implementation_path": {
+                "required": ["scale_gate_dimensions"],
+                "properties": {
+                  "stages": {
+                    "items": {
+                      "required": ["parameterization", "parameter_note"]
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }

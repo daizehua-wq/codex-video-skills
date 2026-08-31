@@ -9,7 +9,7 @@
     "hkrr_review", "claim_uses", "unmapped_assertions", "checks"
   ],
   "properties": {
-    "schema_version": {"enum": ["1.2", "1.3"]},
+    "schema_version": {"enum": ["1.2", "1.3", "1.4"]},
     "project_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
     "fact_card_path": {"type": "string", "minLength": 1},
     "narration_path": {"type": "string", "minLength": 1},
@@ -30,6 +30,14 @@
           "items": {"type": "string", "pattern": "^TL-[0-9]{3,}$"}
         },
         "audience_decision": {"type": "string", "minLength": 1},
+        "title_fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}
+        },
+        "title_limitations_preserved": {"type": "boolean"},
+        "title_scope_note": {"type": "string"},
+        "primary_lesson_override_reason": {"type": ["string", "null"]},
         "logic_chain": {
           "type": "array",
           "minItems": 3,
@@ -175,7 +183,18 @@
           "exact_anchor": {"type": "string", "minLength": 1},
           "use": {"enum": ["direct", "paraphrase", "attributed", "quote"]},
           "attribution_present": {"type": "boolean"},
-          "scope_note": {"type": "string"}
+          "scope_note": {"type": "string"},
+          "preserved_controls": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "event_stage", "temporal_scope", "metric_scope", "causality_status",
+                "spoken_attribution", "forbidden_transformations"
+              ]
+            }
+          },
+          "forbidden_transformations_absent": {"type": "boolean"}
         }
       }
     },
@@ -193,7 +212,77 @@
           "use": {"enum": ["central_takeaway", "supporting_takeaway", "boundary", "implementation_path"]},
           "conditions_preserved": {"type": "boolean"},
           "implementation_difficulty_preserved": {"type": "boolean"},
+          "scope_note": {"type": "string", "minLength": 1},
+          "required_boundary_anchor": {"type": ["string", "null"]},
+          "forbidden_generalizations_absent": {"type": "boolean"},
+          "implementation_stage_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^IP-[0-9]{3,}$"}
+          },
+          "implementation_guidance_disclosed": {"type": "boolean"},
+          "implementation_parameters_preserved": {"type": "boolean"}
+        }
+      }
+    },
+    "boundary_uses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id", "boundary_fact_ids", "bounded_fact_ids", "boundary_anchor",
+          "bounded_anchor", "scope_note"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^BU-[0-9]{3,}$"},
+          "boundary_fact_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}
+          },
+          "bounded_fact_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^FC-[0-9]{3,}$"}
+          },
+          "boundary_anchor": {"type": "string", "minLength": 1},
+          "bounded_anchor": {"type": "string", "minLength": 1},
           "scope_note": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "oral_delivery_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language", "status", "logic_order_reviewed", "actor_action_reviewed",
+        "qualification_placement_reviewed", "abstraction_reviewed",
+        "audit_language_reviewed", "read_aloud_revision_completed",
+        "long_sentence_exceptions", "audit_language_exceptions", "unresolved_flags"
+      ],
+      "properties": {
+        "language": {"enum": ["zh-CN", "other"]},
+        "status": {"enum": ["passed", "not_applicable"]},
+        "logic_order_reviewed": {"type": "boolean"},
+        "actor_action_reviewed": {"type": "boolean"},
+        "qualification_placement_reviewed": {"type": "boolean"},
+        "abstraction_reviewed": {"type": "boolean"},
+        "audit_language_reviewed": {"type": "boolean"},
+        "read_aloud_revision_completed": {"type": "boolean"},
+        "long_sentence_exceptions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/oralException"}
+        },
+        "audit_language_exceptions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/oralException"}
+        },
+        "unresolved_flags": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
         }
       }
     },
@@ -229,17 +318,62 @@
         ,"transferability_reviewed": {"type": "boolean"}
         ,"lesson_conditions_preserved": {"type": "boolean"}
         ,"implementation_difficulty_reviewed": {"type": "boolean"}
+        ,"fact_card_1_5_controls_reviewed": {"type": "boolean"}
+        ,"handoff_roles_reviewed": {"type": "boolean"}
+        ,"title_controls_reviewed": {"type": "boolean"}
+        ,"metric_scope_preserved": {"type": "boolean"}
+        ,"causality_status_preserved": {"type": "boolean"}
+        ,"forbidden_transformations_reviewed": {"type": "boolean"}
+        ,"required_spoken_boundaries_reviewed": {"type": "boolean"}
+        ,"implementation_parameterization_reviewed": {"type": "boolean"}
       }
     }
   },
   "allOf": [
     {
-      "if": {"properties": {"schema_version": {"const": "1.3"}}},
+      "if": {"properties": {"schema_version": {"enum": ["1.3", "1.4"]}}},
       "then": {
         "required": ["lesson_uses"],
         "properties": {
           "editorial_design": {"required": ["selected_lesson_ids", "audience_decision"]},
           "checks": {"required": ["transferability_reviewed", "lesson_conditions_preserved", "implementation_difficulty_reviewed"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"schema_version": {"const": "1.4"}}},
+      "then": {
+        "required": ["boundary_uses", "oral_delivery_review"],
+        "properties": {
+          "editorial_design": {
+            "required": [
+              "title_fact_ids", "title_limitations_preserved", "title_scope_note",
+              "primary_lesson_override_reason"
+            ]
+          },
+          "claim_uses": {
+            "items": {
+              "required": ["preserved_controls", "forbidden_transformations_absent"]
+            }
+          },
+          "lesson_uses": {
+            "items": {
+              "required": [
+                "required_boundary_anchor", "forbidden_generalizations_absent",
+                "implementation_stage_ids", "implementation_guidance_disclosed",
+                "implementation_parameters_preserved"
+              ]
+            }
+          },
+          "checks": {
+            "required": [
+              "fact_card_1_5_controls_reviewed", "handoff_roles_reviewed",
+              "title_controls_reviewed", "metric_scope_preserved",
+              "causality_status_preserved", "forbidden_transformations_reviewed",
+              "required_spoken_boundaries_reviewed",
+              "implementation_parameterization_reviewed"
+            ]
+          }
         }
       }
     }
@@ -252,6 +386,15 @@
       "properties": {
         "score": {"type": "integer", "minimum": 1, "maximum": 5},
         "rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "oralException": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor", "reason"],
+      "properties": {
+        "anchor": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
       }
     }
   }

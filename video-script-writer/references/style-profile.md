@@ -2,6 +2,8 @@
 
 Read this reference when the user has not supplied an overriding style guide or asks to improve hook strength, structure, pacing, oral delivery or concision.
 
+For Chinese narration, also read [chinese-spoken-logic.md](chinese-spoken-logic.md). A Chinese draft must first be reorganized into native listening order; shortening translated report sentences is not enough.
+
 ## Voice
 
 - Sound like a well-informed person explaining one important thing to another person.
@@ -158,5 +160,7 @@ Read the script as speech, not as prose. Fix:
 - unclear pronouns;
 - numbers that are difficult to hear;
 - punctuation that does not match the intended pause.
+
+For Chinese, perform the logic-order pass before this sentence-level pass. Confirm that qualifications are present at first mention, concrete actors and actions precede abstract labels, and audit language has not become the narration's transition system.
 
 Estimate duration from the narration body, excluding the Markdown title. For ordinary Mandarin commentary, `4.0–5.0` non-whitespace characters per second is a planning range; choose and record the actual assumption. Revise when the estimate misses a stated target by more than 15 seconds or 15 percent, whichever is larger. Human recording remains the final timing source.

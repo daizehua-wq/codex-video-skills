@@ -17,6 +17,12 @@ def load_json(path: Path) -> dict:
         return json.load(handle)
 
 
+def _contains_precise_parameter(parts: List[object]) -> bool:
+    """Return whether implementation guidance contains an explicit numeric parameter."""
+    text = " ".join(str(part) for part in parts)
+    return re.search(r"(?<![A-Za-z])\d+(?:\.\d+)?(?:\s*[-–—~至到]\s*\d+(?:\.\d+)?)?", text) is not None
+
+
 def _matches_type(value: object, expected: str) -> bool:
     """Implement the JSON types used by the bundled schema."""
     if expected == "null":
@@ -150,6 +156,7 @@ def main() -> int:
         errors.append("source IDs must be unique")
 
     usable_claims = 0
+    core_proof_count = 0
     for claim in claims:
         claim_id = claim.get("id", "<missing>")
         script_use = claim.get("script_use")
@@ -182,6 +189,83 @@ def main() -> int:
             if claim.get("verification_status") in {"independently_verified", "primary_source_confirmed"}:
                 errors.append(f"{claim_id}: D/E-only evidence cannot support {claim.get('verification_status')}")
 
+        if schema_version == "1.5":
+            handoff_role = claim.get("handoff_role")
+            event_stage = claim.get("event_stage")
+            temporal_scope = claim.get("temporal_scope") or {}
+            metric_scope = claim.get("metric_scope")
+            causality_status = claim.get("causality_status")
+            forbidden_transformations = set(claim.get("forbidden_transformations", []))
+            title_use = claim.get("title_use")
+            title_limitations = claim.get("title_limitations", [])
+            spoken_attribution_required = claim.get("spoken_attribution_required")
+
+            if handoff_role == "core_proof":
+                core_proof_count += 1
+            if script_use == "prohibited" and handoff_role not in {"fact_card_only", "prohibited"}:
+                errors.append(f"{claim_id}: prohibited claim must be fact_card_only or prohibited in handoff")
+            if script_use in {"direct", "attributed"} and handoff_role == "prohibited":
+                errors.append(f"{claim_id}: script-usable claim cannot have handoff_role=prohibited")
+
+            if script_use == "attributed" and spoken_attribution_required is not True:
+                errors.append(f"{claim_id}: attributed claim must require spoken attribution")
+            if spoken_attribution_required is True and not str(claim.get("attribution_text") or "").strip():
+                errors.append(f"{claim_id}: spoken attribution requires attribution_text")
+
+            if title_use in {"conditional", "prohibited"} and not title_limitations:
+                errors.append(f"{claim_id}: conditional/prohibited title use requires title_limitations")
+
+            if event_stage in {"planned", "announced", "forecast"} or temporal_scope.get("status") == "future_planned":
+                if "plan_to_completed" not in forbidden_transformations:
+                    errors.append(f"{claim_id}: planned/announced/forecast claim must forbid plan_to_completed")
+                if title_use == "allowed":
+                    errors.append(f"{claim_id}: planned/announced/forecast claim requires conditional or prohibited title use")
+
+            claim_type = claim.get("claim_type")
+            if claim_type == "number":
+                if not isinstance(metric_scope, dict):
+                    errors.append(f"{claim_id}: number claim requires metric_scope")
+                else:
+                    evidence_character = metric_scope.get("evidence_character")
+                    attributed_metric_types = {
+                        "company_reported_performance",
+                        "vendor_reported_performance",
+                        "joint_case_reported_performance",
+                        "participant_self_reported",
+                        "award_entry_reported",
+                    }
+                    if evidence_character in attributed_metric_types:
+                        if script_use != "attributed" or spoken_attribution_required is not True:
+                            errors.append(
+                                f"{claim_id}: {evidence_character} metric must be attributed in narration"
+                            )
+                        if title_use == "allowed":
+                            errors.append(
+                                f"{claim_id}: reported performance metric requires conditional or prohibited title use"
+                            )
+                        if "attributed_to_independent" not in forbidden_transformations:
+                            errors.append(
+                                f"{claim_id}: reported performance metric must forbid attributed_to_independent"
+                            )
+                    if evidence_character == "unknown" and script_use != "prohibited":
+                        errors.append(f"{claim_id}: metric with unknown evidence character must be prohibited")
+                if "metric_scope_change" not in forbidden_transformations:
+                    errors.append(f"{claim_id}: number claim must forbid metric_scope_change")
+            elif metric_scope is not None:
+                errors.append(f"{claim_id}: non-number claim must use metric_scope=null")
+
+            if claim_type == "causality":
+                if causality_status == "not_causal":
+                    errors.append(f"{claim_id}: causality claim cannot use causality_status=not_causal")
+            elif causality_status != "not_causal":
+                errors.append(f"{claim_id}: non-causality claim must use causality_status=not_causal")
+
+            if causality_status == "sequence_only" and "sequence_to_causation" not in forbidden_transformations:
+                errors.append(f"{claim_id}: sequence-only claim must forbid sequence_to_causation")
+            if causality_status == "company_attributed":
+                if script_use != "attributed" or spoken_attribution_required is not True:
+                    errors.append(f"{claim_id}: company-attributed causality requires spoken attribution")
+
     for source in sources:
         source_id = source.get("id", "<missing>")
         unknown_claims = sorted(set(source.get("supports_claim_ids", [])) - claim_id_set)
@@ -196,17 +280,33 @@ def main() -> int:
         unknown_claims = sorted(set(conflict.get("claim_ids", [])) - claim_id_set)
         if unknown_claims:
             errors.append(f"conflict references unknown claim IDs {unknown_claims}")
+        if schema_version == "1.5":
+            conflict_roles = {
+                claims_by_id.get(claim_id, {}).get("handoff_role")
+                for claim_id in conflict.get("claim_ids", [])
+            }
+            if not conflict_roles.intersection({"required_boundary", "fact_card_only", "prohibited"}):
+                errors.append(
+                    "schema 1.5 conflict must be classified as required_boundary, "
+                    "fact_card_only, or prohibited for script handoff"
+                )
 
     if data.get("publication_status") in {"pass", "conditional"} and usable_claims == 0:
         errors.append("pass or conditional fact card requires at least one usable claim")
+    if (
+        schema_version == "1.5"
+        and data.get("publication_status") in {"pass", "conditional"}
+        and core_proof_count == 0
+    ):
+        errors.append("schema 1.5 pass or conditional fact card requires at least one core_proof claim")
 
-    if schema_version in {"1.0", "1.1", "1.2", "1.3"}:
+    if schema_version in {"1.0", "1.1", "1.2", "1.3", "1.4"}:
         print(
-            f"WARN: schema {schema_version} is legacy; upgrade to 1.4 when revising this card",
+            f"WARN: schema {schema_version} is legacy; upgrade to 1.5 when revising this card",
             file=sys.stderr,
         )
 
-    if schema_version in {"1.1", "1.2", "1.3", "1.4"}:
+    if schema_version in {"1.1", "1.2", "1.3", "1.4", "1.5"}:
         audit = data.get("verification_audit", {})
         temporal = audit.get("temporal_search", {})
         temporal_claim_types = {"number", "quote", "chronology", "causality", "forecast"}
@@ -292,14 +392,14 @@ def main() -> int:
 
     transferability = data.get("transferability", {})
     lessons = transferability.get("lessons", [])
-    if schema_version == "1.4":
+    if schema_version in {"1.4", "1.5"}:
         event_overview = data.get("event_overview")
         if isinstance(event_overview, dict):
             event_applicable = event_overview.get("applicable")
             case_applicable = transferability.get("applicable")
             if event_applicable is not case_applicable:
                 errors.append(
-                    "event_overview.applicable must match transferability.applicable in schema 1.4"
+                    "event_overview.applicable must match transferability.applicable in schema 1.4+"
                 )
 
             for dimension in ("who", "what", "when", "where", "why", "how", "outcome"):
@@ -339,7 +439,7 @@ def main() -> int:
                         f"event_overview.{dimension}: non-case mode requires not_applicable"
                     )
 
-    if schema_version in {"1.2", "1.3", "1.4"}:
+    if schema_version in {"1.2", "1.3", "1.4", "1.5"}:
         mechanism_claim_ids = transferability.get("mechanism_claim_ids", [])
         unknown_mechanism_claims = sorted(set(mechanism_claim_ids) - claim_id_set)
         if unknown_mechanism_claims:
@@ -356,6 +456,7 @@ def main() -> int:
         if transferability.get("applicable") is False and lessons:
             errors.append("non-applicable transferability analysis must not contain lessons")
 
+        primary_lesson_count = 0
         for lesson in lessons:
             lesson_id = lesson.get("id", "<missing>")
             supporting_claim_ids = lesson.get("supporting_claim_ids", [])
@@ -390,10 +491,32 @@ def main() -> int:
                 errors.append(f"{lesson_id}: difficulty rating requires difficulty_drivers")
             if not lesson.get("evaluation_signals"):
                 errors.append(f"{lesson_id}: transferable lesson requires evaluation_signals")
+            if schema_version == "1.5":
+                priority = lesson.get("priority")
+                if priority == "primary":
+                    primary_lesson_count += 1
+                    if handoff_use not in {"script_ready", "conditional"}:
+                        errors.append(
+                            f"{lesson_id}: primary lesson must be script_ready or conditional"
+                        )
+                    if not str(lesson.get("required_spoken_boundary") or "").strip():
+                        errors.append(
+                            f"{lesson_id}: primary lesson requires a spoken boundary"
+                        )
+                if not lesson.get("forbidden_generalizations"):
+                    errors.append(
+                        f"{lesson_id}: schema 1.5 lesson requires forbidden_generalizations"
+                    )
+
+        if schema_version == "1.5" and transferability.get("applicable") is True:
+            if primary_lesson_count != 1:
+                errors.append(
+                    "schema 1.5 applicable transferability requires exactly one primary lesson"
+                )
 
     implementation_path = transferability.get("implementation_path", {})
     stages = implementation_path.get("stages", [])
-    if schema_version in {"1.3", "1.4"}:
+    if schema_version in {"1.3", "1.4", "1.5"}:
         path_status = implementation_path.get("status")
         applicable = transferability.get("applicable")
         if applicable is True and path_status == "not_applicable":
@@ -405,6 +528,14 @@ def main() -> int:
                 errors.append(f"implementation_path.status={path_status} requires at least one stage")
             if not implementation_path.get("scale_gates"):
                 errors.append(f"implementation_path.status={path_status} requires scale_gates")
+            if schema_version == "1.5":
+                gate_dimensions = set(implementation_path.get("scale_gate_dimensions", []))
+                missing_dimensions = sorted({"efficiency", "quality", "risk"} - gate_dimensions)
+                if missing_dimensions:
+                    errors.append(
+                        "schema 1.5 implementation path scale gates must cover "
+                        f"efficiency, quality, and risk; missing {missing_dimensions}"
+                    )
         if path_status == "conditional" and not implementation_path.get("assumptions"):
             errors.append("conditional implementation path requires assumptions")
         if path_status == "insufficient_evidence":
@@ -453,6 +584,26 @@ def main() -> int:
             )
             if prohibited_claims:
                 errors.append(f"{stage_id}: implementation stage uses prohibited claims {prohibited_claims}")
+            if schema_version == "1.5":
+                parameterization = stage.get("parameterization")
+                parameter_note = str(stage.get("parameter_note") or "").strip()
+                guidance_parts: List[object] = [stage.get("objective", "")]
+                guidance_parts.extend(stage.get("actions", []))
+                guidance_parts.extend(stage.get("prerequisites", []))
+                guidance_parts.extend(stage.get("exit_criteria", []))
+                has_precise_parameter = _contains_precise_parameter(guidance_parts)
+                if has_precise_parameter and parameterization == "none":
+                    errors.append(
+                        f"{stage_id}: numeric guidance requires source_bounded or analyst_proposed parameterization"
+                    )
+                if parameterization in {"source_bounded", "analyst_proposed"} and not parameter_note:
+                    errors.append(
+                        f"{stage_id}: {parameterization} parameterization requires parameter_note"
+                    )
+                if parameterization == "source_bounded" and not stage_claim_ids:
+                    errors.append(
+                        f"{stage_id}: source_bounded parameters require supporting_claim_ids"
+                    )
 
     if errors:
         for error in errors:
